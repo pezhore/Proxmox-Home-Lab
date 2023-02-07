@@ -8,12 +8,12 @@
 resource "proxmox_vm_qemu" "core_vms" {
 
   # Iterate over our yaml config with each core_vm has its own config
-  for_each    = local.config.core_vms
-  name        = each.key
-  desc        = each.value.description
+  for_each = local.config.core_vms
+  name     = each.key
+  desc     = each.value.description
 
-  target_node = local.config.lab.node
-  clone = each.value.template
+  target_node = each.value.node
+  clone       = each.value.template
 
   # When set to 1, the QEMU Guest Agent is enabled. This does require
   # installing/running the qemu-guest-agent service inside the VM
@@ -21,7 +21,7 @@ resource "proxmox_vm_qemu" "core_vms" {
   os_type = each.value.os_type
   cores   = each.value.cores
   sockets = each.value.sockets
-  cpu     = "host"              # Set the type of CPU to whatever our proxmox host has
+  cpu     = "host" # Set the type of CPU to whatever our proxmox host has
   memory  = each.value.memory
   scsihw  = each.value.scsihw
 
