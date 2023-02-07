@@ -1,10 +1,12 @@
 lab:
   node: pve-01
   github_username: pezhore
+  fqdn: pezlab.local
 
 core_vms:
   powerdns:
     template: ubuntu-22.04-tmpl
+    node: pve-01
     description: PowerDNS server for Lab
     os_type: cloud-init
     cores: 2
@@ -23,4 +25,48 @@ core_vms:
           model: virtio
           bridge: vmbr0
     ipaddr: 10.0.0.241/24
+    gateway: 10.0.0.1
+  netbox:
+    template: ubuntu-22.04-tmpl
+    node: pve-02
+    description: Netbox server for Lab
+    os_type: cloud-init
+    cores: 2
+    sockets: 1
+    memory: 2048
+    scsihw: virtio-scsi-pci
+    dynamic:
+      disks:
+        disk0:
+          size: 30G
+          storage: ds415-pve
+          type: scsi
+          format: qcow2
+      networks:
+        net0:
+          model: virtio
+          bridge: vmbr0
+    ipaddr: 10.0.0.242/24
+    gateway: 10.0.0.1
+  freeipa:
+    template: ubuntu-22.04-tmpl
+    node: pve-03
+    description: FreeIPA server for Lab
+    os_type: cloud-init
+    cores: 2
+    sockets: 1
+    memory: 2048
+    scsihw: virtio-scsi-pci
+    dynamic:
+      disks:
+        disk0:
+          size: 30G
+          storage: ds415-pve
+          type: scsi
+          format: qcow2
+      networks:
+        net0:
+          model: virtio
+          bridge: vmbr0
+    ipaddr: 10.0.0.243/24
     gateway: 10.0.0.1
