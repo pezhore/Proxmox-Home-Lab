@@ -1,0 +1,28 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: en_US
+  keyboard:
+    layout: fr
+  ssh:
+    install-server: true
+    allow-pw: true
+  packages:
+    - qemu-guest-agent
+  storage:
+    layout:
+      name: direct
+    swap:
+      size: 0
+  user-data:
+    package_upgrade: true
+    timezone: America/Chicago
+    users:
+      - name: lab
+        passwd: $6$u80lWDtCjzvf3bfJ$HvccjXtD.xtWGsbgKguROlONRyZSS017MnltyN5w83rCWwdzNZdwzvtledRrkfKz9kbkv0lyzbUxuPXelGAbf1
+        groups: [adm, cdrom, dip, plugdev, lxd, sudo]
+        lock-passwd: false
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        shell: /bin/bash
+        ssh_authorized_keys:
+          - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIYfMRy/i+yZVYff+B9sTl2e+snF0h5+lRmIcBOa/hbh
