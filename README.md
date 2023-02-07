@@ -17,3 +17,4 @@ Three node Proxmox cluster installed with shared storage.
 ## Acknowledgements
 
 * Packer templates based on work by [Julien Brochet](https://github.com/aerialls/madalynn-packer)
+* Terraform provider for Proxmox by [Telmate](https://registry.terraform.io/providers/Telmate/proxmox)
