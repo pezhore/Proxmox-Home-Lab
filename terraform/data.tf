@@ -10,3 +10,7 @@ data "vault_generic_secret" "terraform" {
 data "vault_generic_secret" "shared" {
   path = "homelab/shared"
 }
+
+data "http" "github_ssh_keys" {
+  url = "https://github.com/${local.config.lab.github_username}.keys"
+}

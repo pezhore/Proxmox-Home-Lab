@@ -1,14 +1,26 @@
 lab:
   node: pve-01
-  storage: ds415-pve
-  sshkey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIYfMRy/i+yZVYff+B9sTl2e+snF0h5+lRmIcBOa/hbh
+  github_username: pezhore
 
 core_vms:
   powerdns:
     template: ubuntu-22.04-tmpl
+    description: PowerDNS server for Lab
+    os_type: cloud-init
     cores: 2
     sockets: 1
     memory: 2048
-    disk_size: 30G
+    scsihw: virtio-scsi-pci
+    dynamic:
+      disks:
+        disk0:
+          size: 30G
+          storage: ds415-pve
+          type: scsi
+          format: qcow2
+      networks:
+        net0:
+          model: virtio
+          bridge: vmbr0
     ipaddr: 10.0.0.241/24
     gateway: 10.0.0.1
