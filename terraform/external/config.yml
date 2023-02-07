@@ -1,0 +1,14 @@
+lab:
+  node: pve-01
+  storage: ds415-pve
+  sshkey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIYfMRy/i+yZVYff+B9sTl2e+snF0h5+lRmIcBOa/hbh
+
+core_vms:
+  powerdns:
+    template: ubuntu-22.04-tmpl
+    cores: 2
+    sockets: 1
+    memory: 2048
+    disk_size: 30G
+    ipaddr: 10.0.0.241/24
+    gateway: 10.0.0.1
