@@ -1,14 +1,62 @@
 lab:
+  nodes:
+    pve-01:
+    pve-02:
+    pve-03:
+  dns:
+    - 10.0.0.19
+  tz: America/Chicago
   node: pve-01
   github_username: pezhore
-  fqdn: pezlab.local
-
+  fqdn: lan.pezlab.dev
+  users:
+    terraform-prov@pve:
+      groups: terraform
+    packer@pve:
+      groups: packer
+  acls:
+    terraform:
+      privileges:
+      - VM.Allocate 
+      - VM.Clone 
+      - VM.Config.CDROM 
+      - VM.Config.CPU 
+      - VM.Config.Cloudinit 
+      - VM.Config.Disk 
+      - VM.Config.HWType 
+      - VM.Config.Memory 
+      - VM.Config.Network 
+      - VM.Config.Options 
+      - VM.Monitor 
+      - VM.Audit 
+      - VM.PowerMgmt
+      - Datastore.AllocateSpace
+      - Datastore.Audit
+    packer:
+      privileges:
+        - VM.Config.Disk
+        - VM.Config.CPU
+        - VM.Config.Memory
+        - Datastore.AllocateSpace
+        - Sys.Modify
+        - VM.Config.Options
+        - VM.Allocate
+        - VM.Audit
+        - VM.Console
+        - VM.Config.CDROM
+        - VM.Config.Network
+        - VM.PowerMgmt
+        - VM.Config.HWType
+        - VM.Monitor
+cloud_images:
+  focal:
+  jammy:
 core_vms:
   powerdns:
-    template: ubuntu-22.04-tmpl
+    template: ubuntu-2204-template
     node: pve-01
     description: PowerDNS server for Lab
-    os_type: cloud-init
+    os_type: ubuntu
     cores: 2
     sockets: 1
     memory: 2048
@@ -27,10 +75,10 @@ core_vms:
     ipaddr: 10.0.0.241/24
     gateway: 10.0.0.1
   netbox:
-    template: ubuntu-22.04-tmpl
+    template: ubuntu-2204-template
     node: pve-02
     description: Netbox server for Lab
-    os_type: cloud-init
+    os_type: ubuntu
     cores: 2
     sockets: 1
     memory: 2048
@@ -46,13 +94,13 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipaddr: 10.0.0.242/24
+    ipaddr: 10.0.0.40/24
     gateway: 10.0.0.1
   freeipa:
-    template: ubuntu-22.04-tmpl
+    template: ubuntu-2204-template
     node: pve-03
     description: FreeIPA server for Lab
-    os_type: cloud-init
+    os_type: ubuntu
     cores: 2
     sockets: 1
     memory: 2048

@@ -3,7 +3,7 @@ autoinstall:
   version: 1
   locale: en_US
   keyboard:
-    layout: fr
+    layout: us
   ssh:
     install-server: true
     allow-pw: true

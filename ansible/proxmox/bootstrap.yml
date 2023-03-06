@@ -1,0 +1,78 @@
+---
+- hosts: Lab
+  become: true
+
+  tasks:
+    - name: Check if backup file exists
+      stat:
+        path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js.backup
+      register: proxmoxlib_backup
+
+    - name: Add apt line in file
+      lineinfile:
+        path: /etc/apt/sources.list
+        line: "deb http://download.proxmox.com/debian/pve bullseye pve-no-subscription"
+        state: present
+        create: yes
+        owner: root
+        group: root
+        mode: 0644
+    
+    - name: Ensure pve-enterprise file is absent
+      file:
+        path: /etc/apt/sources.list.d/pve-enterprise.list
+        state: absent
+    
+    - name: Install vim apt packages
+      apt:
+        name: vim
+        state: present
+        update_cache: yes
+
+    - name: Remove warning about no pve-no-subscription"
+      shell: sed -i.backup -z "s/res === null || res === undefined || \!res || res\n\t\t\t.data.status.toLowerCase() \!== 'active'/false/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+      notify: restart pveproxy
+      when: proxmoxlib_backup.stat.exists == false
+
+    - name: Update all available packages
+      apt:
+        upgrade: dist
+        update_cache: yes
+  
+    - name: Check if a reboot is needed for Debian and Ubuntu boxes
+      register: reboot_required_file
+      stat: path=/var/run/reboot-required get_md5=no
+
+    - name: Reboot the Debian or Ubuntu server
+      reboot:
+        msg: "Reboot initiated by Ansible due to kernel updates"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: reboot_required_file.stat.exists
+
+    - name: Install certificates from vault
+      block:
+        - copy:
+            dest: /etc/pve/local/pve-ssl.pem
+            content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert}}"
+            owner: root
+            group: www-data
+            mode: 0640
+        
+        - name: Install key from vault
+          copy:
+            dest: /etc/pve/local/pve-ssl.key
+            content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey}}"
+            owner: root
+            group: www-data
+            mode: 0640
+      notify: restart pveproxy
+
+  handlers:
+    - name: restart pveproxy
+      service:
+        name: pveproxy
+        state: restarted
