@@ -32,7 +32,7 @@ iface bond0 inet manual
 
 auto vmbr0
 iface vmbr0 inet static
-	address 10.0.0.210/24
+	address 10.0.0.211/24
 	gateway 10.0.0.1
 	bridge-ports eno2
 	bridge-stp off
@@ -40,7 +40,7 @@ iface vmbr0 inet static
 
 auto vmbr1
 iface vmbr1 inet static
-	address 10.2.1.210/24
+	address 10.2.1.211/24
 	ovs_type OVSBridge
 	ovs_ports bond0
 	ovs_mtu 9000
