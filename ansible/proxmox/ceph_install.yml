@@ -1,0 +1,148 @@
+---
+- hosts: proxmox
+  become: true
+
+
+  vars:
+    - ceph_device: /dev/nvme0n1
+    - ceph_device_initialize: false
+    - minimum_num_osds_for_pool: 3
+    - ceph_fs_pg: 64
+    - ceph_pool: "tank"
+    - ceph_nodes: "pve-01,pve-02,pve-03"
+    
+  tasks:
+
+    - name: Install ceph packages
+      shell: yes | pveceph install
+      args:
+        creates: /etc/apt/sources.list.d/ceph.list
+
+    - name: Setup Ceph Master
+      block:    
+        - name: Check ceph status
+          shell: pveceph status 2>&1 | grep -v "not initialized"
+          register: pveceph_status
+          ignore_errors: true
+          changed_when: false
+
+        - name: Create ceph network
+          command: pveceph init --network 10.2.1.0/24
+          when: pveceph_status.rc == 1
+      when: "'ceph_master' in group_names"
+    
+    - name: Create ceph monitors
+      block:
+        - name: Check for ceph-mon
+          command: pgrep ceph-mon
+          register: ceph_mon_status
+          ignore_errors: true
+          changed_when: false
+
+        - name: Create ceph-mon
+          shell: pveceph createmon
+          when: ceph_mon_status.rc == 1
+      when: "'ceph_mon' in group_names"
+    
+    - name: Create ceph managers
+      block:
+        - name: Check for ceph-mgr
+          command: pgrep ceph-mgr
+          register: ceph_mgr_status
+          ignore_errors: true
+          changed_when: false
+
+        - name: Create ceph-mgr
+          shell: pveceph createmgr
+          when: ceph_mgr_status.rc == 1
+      when: "'ceph_mgr' in group_names"
+    
+    - name: Create ceph osds
+      block:
+        - name: Check for existing ceph_osd
+          command: pgrep ceph-osd
+          register: ceph_osd_pid
+          changed_when: false
+          ignore_errors: true
+
+        - name: Read first 5KB of ceph device to determine state
+          shell: dd if={{ ceph_device }} bs=5K count=1 | sha256sum
+          when: "ceph_osd_pid.rc != 0"
+          register: ceph_device_first_5KB_sha256
+          changed_when: false
+
+        - name: Determine if should initialize ceph_osd
+          when: "ceph_osd_pid.rc != 0 and ceph_device_first_5KB_sha256.stdout == 'a11937f356a9b0ba592c82f5290bac8016cb33a3f9bc68d3490147c158ebb10d  -'"
+          set_fact:
+            ceph_device_initialize: true
+          
+        - name: Initialize ceph_osd device
+          when: ceph_device_initialize == True
+          command: pveceph createosd {{ ceph_device }}
+      when: "'ceph_osd' in group_names"
+
+    - name: Create ceph pool
+      block:
+        - name: Check ceph status
+          command: pveceph status
+          register: pveceph_status
+          ignore_errors: true
+          changed_when: false
+
+        - name: Check ceph pools
+          shell: pveceph pool ls | grep -e "^{{ ceph_pool }} "
+          register: ceph_pool_status
+          changed_when: false
+          ignore_errors: true
+
+        - name: Create ceph pool
+          when: ceph_pool_status.rc > 0 and (pveceph_status.stdout | from_json).osdmap.osdmap.num_up_osds >= minimum_num_osds_for_pool
+          command: pveceph pool create {{ ceph_pool }}
+
+        - name: Check ceph-vm storage
+          command: pvesm list ceph-vm
+          changed_when: false
+          ignore_errors: true
+          register: ceph_vm_status
+
+        - name: Create ceph VM storage (ceph-vm)
+          when: ceph_vm_status.rc > 0
+          command: pvesm add rbd ceph-vm -nodes {{ ceph_nodes }} -pool {{ ceph_pool }} -content images
+
+        - name: Check ceph-ct storage
+          command: pvesm list ceph-ct
+          changed_when: false
+          ignore_errors: true
+          register: ceph_ct_status
+
+        - name: Create ceph container storage (ceph-ct)
+          when: ceph_ct_status.rc > 0
+          command: pvesm add rbd ceph-ct -nodes {{ ceph_nodes }} -pool {{ ceph_pool }} -content rootdir
+      when: "'ceph_master' in group_names"
+    
+    - name: Create ceph metadata service (MDS)
+      block:
+        - name: Check ceph-mds service
+          command: pgrep ceph-mds
+          register: ceph_mds_pid
+          changed_when: false
+          ignore_errors: true
+
+        - name: Create ceph-mds service
+          command: pveceph mds create
+          when: ceph_mds_pid.rc > 0
+      when: "'ceph_mds' in group_names"
+  
+    # - name: Create CephFS
+    #   block:
+    #     - name: Check CephFS status
+    #       shell: ceph fs ls | grep -e "^name. cephfs.*cephfs_data"
+    #       register: ceph_fs_status
+    #       changed_when: false
+    #       ignore_errors: true
+
+    #     - name: Create CephFS
+    #       when: ceph_fs_status.rc > 0
+    #       command: pveceph fs create --pg_num {{ ceph_fs_pg }} --add-storage
+    #   when: "'ceph_master' in group_names"
+

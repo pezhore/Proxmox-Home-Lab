@@ -28,3 +28,4 @@ qm set 9000 --serial0 socket --vga serial0
 
 * Packer templates based on work by [Julien Brochet](https://github.com/aerialls/madalynn-packer)
 * Terraform provider for Proxmox by [Telmate](https://registry.terraform.io/providers/Telmate/proxmox)
+* Ceph Ansible code taken and consolidated from [peacedata0](https://github.com/peacedata0/proxmox-ansible-1)
