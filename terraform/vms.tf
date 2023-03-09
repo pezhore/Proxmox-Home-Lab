@@ -62,6 +62,13 @@ resource "proxmox_virtual_environment_vm" "ubuntu_jammy" {
 
   template = true
   vm_id    = 2040
+
+
+  lifecycle {
+    ignore_changes = [
+      initialization,
+    ]
+  }
 }
 
 resource "proxmox_virtual_environment_vm" "core" {
@@ -106,6 +113,21 @@ resource "proxmox_virtual_environment_vm" "core" {
     dns {
       server = local.config.lab.dns[0]
     }
+    ip_config {
+      ipv4 {
+        address = each.value.ipv4
+        gateway = each.value.gateway
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      ipv4_addresses,
+      ipv6_addresses,
+      network_interface_names,
+      initialization,
+    ]
   }
 
 }

@@ -3,7 +3,7 @@
 #===============================================================================
 
 resource "proxmox_virtual_environment_file" "user_config" {
-  for_each = local.config.core_vms
+  for_each     = local.config.core_vms
   content_type = "snippets"
   datastore_id = local.file_ds
   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
@@ -23,6 +23,7 @@ users:
     shell: /bin/bash
     ssh-authorized-keys:
       - ${data.vault_generic_secret.terraform.data["pm_public_key"]}
+      - ${data.http.github_ssh_keys.response_body}
     sudo: ALL=(ALL) NOPASSWD:ALL
     EOF
 
@@ -46,7 +47,7 @@ runcmd:
     - echo "done" > /tmp/vendor-cloud-init-done
     EOF
 
-    file_name = "terraform-provider-proxmox-example-vendor-config.yaml"
+    file_name = "agent_install-vendor-config.yaml"
   }
 }
 

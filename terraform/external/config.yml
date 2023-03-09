@@ -73,7 +73,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipaddr: 10.0.0.241/24
+    ipv4: 10.0.0.241/24
     gateway: 10.0.0.1
   netbox:
     template: ubuntu-2204-template
@@ -96,7 +96,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipaddr: 10.0.0.40/24
+    ipv4: 10.0.0.40/24
     gateway: 10.0.0.1
   freeipa:
     template: ubuntu-2204-template
@@ -119,5 +119,5 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipaddr: 10.0.0.243/24
+    ipv4: 10.0.0.243/24
     gateway: 10.0.0.1
