@@ -1,5 +1,5 @@
 ---
-- hosts: Lab
+- hosts: proxmox
   become: true
 
   tasks:
@@ -25,9 +25,13 @@
     
     - name: Install vim apt packages
       apt:
-        name: vim
+        name: "{{ item }}"
         state: present
         update_cache: yes
+      loop:
+        - vim
+        - openvswitch-switch
+        - net-tools
 
     - name: Remove warning about no pve-no-subscription"
       shell: sed -i.backup -z "s/res === null || res === undefined || \!res || res\n\t\t\t.data.status.toLowerCase() \!== 'active'/false/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
