@@ -2,7 +2,7 @@ resource "proxmox_virtual_environment_container" "example_template" {
   description = "Managed by Terraform"
 
   disk {
-    datastore_id = local.datastore_id
+    datastore_id = local.container_ds
     size         = 10
   }
 
@@ -49,7 +49,7 @@ resource "proxmox_virtual_environment_container" "example_template" {
 
 resource "proxmox_virtual_environment_container" "example" {
   disk {
-    datastore_id = local.datastore_id
+    datastore_id = local.container_ds
   }
 
   clone {

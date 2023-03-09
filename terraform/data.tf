@@ -1,4 +1,4 @@
-#################################################
+# k#################################################
 # data.tf
 #
 # This file contains the data sources for the Terraform configuration.
@@ -24,5 +24,8 @@ data "http" "github_ssh_keys" {
 data "proxmox_virtual_environment_nodes" "lab" {}
 
 data "proxmox_virtual_environment_datastores" "lab" {
-  node_name = data.proxmox_virtual_environment_nodes.lab.names[0]
+  # for_each = data.proxmox_virtual_environment_nodes.lab.names
+  # node_name = each.key
+
+  node_name = data.proxmox_virtual_environment_nodes.lab.names[1]
 }

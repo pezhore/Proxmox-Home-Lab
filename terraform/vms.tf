@@ -1,4 +1,4 @@
-resource "proxmox_virtual_environment_vm" "example_template" {
+resource "proxmox_virtual_environment_vm" "ubuntu_jammy" {
   agent {
     enabled = true
   }
@@ -6,14 +6,14 @@ resource "proxmox_virtual_environment_vm" "example_template" {
   description = "Managed by Terraform"
 
   #  disk {
-  #    datastore_id = local.datastore_id
+  #    datastore_id = local.vm_ds
   #    file_id      = proxmox_virtual_environment_file.ubuntu["jammy"].id
   #    interface    = "virtio0"
   #    iothread     = true
   #  }
 
   disk {
-    datastore_id = local.datastore_id
+    datastore_id = local.vm_ds
     file_id      = proxmox_virtual_environment_file.ubuntu["jammy"].id
     interface    = "scsi0"
     discard      = "on"
@@ -28,7 +28,7 @@ resource "proxmox_virtual_environment_vm" "example_template" {
   #  }
 
   initialization {
-    datastore_id = local.datastore_id
+    datastore_id = local.vm_ds
 
     dns {
       server = "1.1.1.1"
@@ -60,19 +60,20 @@ resource "proxmox_virtual_environment_vm" "example_template" {
   vm_id    = 2040
 }
 
-resource "proxmox_virtual_environment_vm" "example" {
-  name      = "terraform-provider-proxmox-example"
-  node_name = data.proxmox_virtual_environment_nodes.lab.names[0]
+resource "proxmox_virtual_environment_vm" "core" {
+  for_each  = local.config.core_vms
+  name      = each.key
+  node_name = each.value.node
   pool_id   = proxmox_virtual_environment_pool.lab.id
-  vm_id     = 2041
+  vm_id     = each.value.vm_id
   tags      = ["terraform", "ubuntu"]
 
   clone {
-    vm_id = proxmox_virtual_environment_vm.example_template.id
+    vm_id = proxmox_virtual_environment_vm.ubuntu_jammy.id
   }
 
   memory {
-    dedicated = 768
+    dedicated = each.value.memory
   }
 
   connection {
@@ -91,7 +92,7 @@ resource "proxmox_virtual_environment_vm" "example" {
 
   initialization {
     dns {
-      server = "8.8.8.8"
+      server = local.config.lab.dns[0]
     }
   }
 

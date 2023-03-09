@@ -4,7 +4,7 @@
 
 resource "proxmox_virtual_environment_file" "user_config" {
   content_type = "snippets"
-  datastore_id = local.datastore_id
+  datastore_id = local.file_ds
   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
 
   source_raw {
@@ -31,7 +31,7 @@ users:
 
 resource "proxmox_virtual_environment_file" "vendor_config" {
   content_type = "snippets"
-  datastore_id = local.datastore_id
+  datastore_id = local.file_ds
   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
 
   source_raw {
@@ -55,9 +55,9 @@ runcmd:
 #===============================================================================
 
 resource "proxmox_virtual_environment_file" "ubuntu" {
-  for_each = local.config.cloud_images
+  for_each     = local.config.cloud_images
   content_type = "iso"
-  datastore_id = local.datastore_id
+  datastore_id = local.file_ds
   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
 
   source_file {
@@ -67,7 +67,7 @@ resource "proxmox_virtual_environment_file" "ubuntu" {
 
 resource "proxmox_virtual_environment_file" "ubuntu_container_template" {
   content_type = "vztmpl"
-  datastore_id = local.datastore_id
+  datastore_id = local.file_ds
   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
 
   source_file {

@@ -60,12 +60,13 @@ core_vms:
     cores: 2
     sockets: 1
     memory: 2048
+    vm_id: 101
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
         disk0:
           size: 30G
-          storage: ds415-pve
+          storage: cephfs
           type: scsi
           format: qcow2
       networks:
@@ -82,12 +83,13 @@ core_vms:
     cores: 2
     sockets: 1
     memory: 2048
+    vm_id: 101
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
         disk0:
           size: 30G
-          storage: ds415-pve
+          storage: cephfs
           type: scsi
           format: qcow2
       networks:
@@ -104,12 +106,13 @@ core_vms:
     cores: 2
     sockets: 1
     memory: 2048
+    vm_id: 102
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
         disk0:
           size: 30G
-          storage: ds415-pve
+          storage: cephfs
           type: scsi
           format: qcow2
       networks:
