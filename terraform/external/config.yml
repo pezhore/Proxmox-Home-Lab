@@ -77,13 +77,13 @@ core_vms:
     gateway: 10.0.0.1
   netbox:
     template: ubuntu-2204-template
-    node: pve-02
+    node: pve-01
     description: Netbox server for Lab
     os_type: ubuntu
     cores: 2
     sockets: 1
     memory: 2048
-    vm_id: 101
+    vm_id: 102
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
@@ -100,13 +100,13 @@ core_vms:
     gateway: 10.0.0.1
   freeipa:
     template: ubuntu-2204-template
-    node: pve-03
+    node: pve-01
     description: FreeIPA server for Lab
     os_type: ubuntu
     cores: 2
     sockets: 1
     memory: 2048
-    vm_id: 102
+    vm_id: 103
     scsihw: virtio-scsi-pci
     dynamic:
       disks:

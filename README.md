@@ -16,6 +16,8 @@ Three node Proxmox cluster installed with shared storage.
 
 ## Known Issues
 
+### Packer
+
 Packer templates need to have a `cloud-init` drive added with the following commands (replace `9000` with the VM ID)
 
 ```bash
@@ -23,6 +25,11 @@ qm set 9000 --ide2 local-lvm:cloudinit
 qm set 9000 --boot order=scsi0
 qm set 9000 --serial0 socket --vga serial0
 ```
+
+### Terraform
+
+Proxmox really doesn't like to have multiple VMs created from the same template simulateously. to fix this, add
+`-parallelism=1` to the `terraform apply` command.
 
 ## Acknowledgements
 

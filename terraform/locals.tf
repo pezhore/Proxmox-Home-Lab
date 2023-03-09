@@ -8,19 +8,19 @@ locals {
   vm_ds = element(data.proxmox_virtual_environment_datastores.lab.datastore_ids,
     index(
       data.proxmox_virtual_environment_datastores.lab.datastore_ids,
-      "vms"
+      "ceph-vm"
     )
   )
   file_ds = element(data.proxmox_virtual_environment_datastores.lab.datastore_ids,
     index(
       data.proxmox_virtual_environment_datastores.lab.datastore_ids,
-      "cephfs"
+      "ds1618"
     )
   )
   container_ds = element(data.proxmox_virtual_environment_datastores.lab.datastore_ids,
     index(
       data.proxmox_virtual_environment_datastores.lab.datastore_ids,
-      "ds1618"
+      "ceph-ct"
     )
   )
 }

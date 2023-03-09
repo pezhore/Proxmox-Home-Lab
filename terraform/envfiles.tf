@@ -3,6 +3,7 @@
 #===============================================================================
 
 resource "proxmox_virtual_environment_file" "user_config" {
+  for_each = local.config.core_vms
   content_type = "snippets"
   datastore_id = local.file_ds
   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
@@ -14,7 +15,7 @@ chpasswd:
   list: |
     ubuntu:example
   expire: false
-hostname: terraform-provider-proxmox-example
+hostname: ${each.key}
 users:
   - default
   - name: ubuntu
@@ -25,7 +26,7 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     EOF
 
-    file_name = "terraform-provider-proxmox-example-user-config.yaml"
+    file_name = "${each.key}-user-config.yaml"
   }
 }
 
