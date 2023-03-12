@@ -51,9 +51,9 @@ source "proxmox" "ubuntu_2204" {
     "c<wait>",
     "linux /casper/vmlinuz --- autoinstall net.ifnames=0 biosdevname=0 ip=dhcp ipv6.disable=1 ds=\"nocloud-net;seedfrom=http://{{.HTTPIP}}:{{.HTTPPort}}/\"", // IPv6 disabled to fix hang: https://answers.launchpad.net/ubuntu/+source/ubiquity/+question/698383
     "<enter><wait>",
-    "initrd /casper/",          // This is weird, but for some reason my proxmox/packer runs will ignore anything after '/casper/'
-    "<enter><wait>",            //  so we throw in another enter/wait before typing in just 'initrd'
-    "initrd<enter><wait>", 
+    "initrd /casper/", // This is weird, but for some reason my proxmox/packer runs will ignore anything after '/casper/'
+    "<enter><wait>",   //  so we throw in another enter/wait before typing in just 'initrd'
+    "initrd<enter><wait>",
     "boot",
     "<enter>"
   ]
@@ -73,10 +73,10 @@ source "proxmox" "ubuntu_2204" {
   memory         = 1024
 
   network_adapters {
-    model = "virtio"
+    model  = "virtio"
     bridge = "vmbr0"
   }
-  
+
   node                     = var.proxmox_node
   proxmox_url              = local.proxmox_url
   insecure_skip_tls_verify = true
@@ -88,9 +88,9 @@ source "proxmox" "ubuntu_2204" {
   ssh_timeout  = "200m"
 
   scsi_controller = "virtio-scsi-single"
-  template_name = "${var.proxmox_template_name}"
-  unmount_iso   = true
-  vm_id         = "${var.proxmox_vm_id}"
+  template_name   = "${var.proxmox_template_name}"
+  unmount_iso     = true
+  vm_id           = "${var.proxmox_vm_id}"
 }
 
 build {
