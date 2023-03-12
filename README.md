@@ -14,6 +14,16 @@ Packer, Terraform, and Ansible code to run a three node clustered Proxmox Home L
 
 Three node Proxmox cluster installed with shared storage.
 
+## Order of Operations
+
+1. Install Proxmox on each node, using xfs for storage, leaving the 2TB NVMe drive untouched for future Ceph configuration
+2. Join the hosts to a cluster
+3. Run the bootstrap ansible playbook to install prerequisites, and do base configuration
+4. `scp` the network configuration and apply (setting up the proper bond/bridge interfaces)
+5. Configure Ceph
+6. Configure NFS share for Synology DS1618
+7. Run Terraform to do things
+
 ## Known Issues
 
 ### Packer
