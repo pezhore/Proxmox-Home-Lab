@@ -32,6 +32,15 @@
         - vim
         - openvswitch-switch
         - net-tools
+        - python3-pip
+
+    - name: Install pip packages
+      pip:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - proxmoxer
+        - hvac
 
     - name: Remove warning about no pve-no-subscription"
       shell: sed -i.backup -z "s/res === null || res === undefined || \!res || res\n\t\t\t.data.status.toLowerCase() \!== 'active'/false/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js

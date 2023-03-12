@@ -41,6 +41,14 @@ qm set 9000 --serial0 socket --vga serial0
 Proxmox really doesn't like to have multiple VMs created from the same template simulateously. to fix this, add
 `-parallelism=1` to the `terraform apply` command.
 
+### Vault Integration
+
+To run Terraform and pull AWS creds from Vault, update the following with your mount/field.
+
+```
+AWS_ACCESS_KEY_ID=$(vault kv get -mount=homelab -field=terraform_access_key wasabi ) AWS_SECRET_ACCESS_KEY=$(vault kv get -mount=homelab -field=terraform_secret_key wasabi) terraform plan
+```
+
 ## Acknowledgements
 
 * Packer templates based on work by [Julien Brochet](https://github.com/aerialls/madalynn-packer)
