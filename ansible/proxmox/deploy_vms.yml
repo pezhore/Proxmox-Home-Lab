@@ -1,0 +1,102 @@
+####################################################
+# deploy_vms.yml
+#
+# Buckle up, this module is not well documented *at all*.
+#
+# We have to do a few things, to deploy our VMs:
+# 1. Clone the template - the clone action can only take limited parameters, zero hardware config
+# 2. Update the VM - this is where we set the hardware config, and the cloud-init config, network config, etc.
+# 3. Start the VM - this actually starts the VM.
+#
+# It seems simple, but the module is so poorly documented, with limited practical examples.
+---
+- hosts: localhost
+
+  tasks:
+    - name: Load Config
+      include_vars:
+        file: ../../terraform/external/config.yml
+        name: config
+      register: result
+
+    - name: Get current status for cluster
+      community.general.proxmox_kvm:
+        api_user: root@pam
+        api_password:  "{{ lookup('hashi_vault', 'secret=homelab/data/shared').root_password}}"
+        api_host: "{{ config.lab.api_host}}"    
+        state: current
+        name: "{{ item.key }}"
+        node: pve-01
+      register: cluster_vms
+      loop: "{{ config.core_vms |dict2items}}"
+      ignore_errors: true
+
+### This whole thing was an effort to mitigate errors when migrating/balancing vms. it doesn't work really - vms appear to be on a different host than what they actual are
+    # - name: debug message where the results json vmid is 103
+    #   debug:
+    #     msg: "{{ cluster_vms.results | json_query('[?vmid==`103`].item.value.node') }}"
+    
+
+    # - name: Loop through and find our nodes
+    #   debug:
+    #     msg: "vm: {{item.key}} --- confnode: {{item.value.node}} --- actual_node:{{ cluster_vms.results | json_query(query) }}"
+    #   vars:
+    #     query: "[?vmid==`{{ item.value.vmid }}`].item.value.node"
+    #   loop: "{{ config.core_vms |dict2items}}"
+
+    # - name: debug message to check node position
+    #   debug:
+    #     msg: "{% if item.value.node == cluster_vms.results|json_query(query)|first %}Should Match{% else %}name: {{item.key}} is configured to be on '{{ item.value.node }}', but the query shows it's actual node is '{{ cluster_vms.results | json_query(query)| first }}'. Look here for the config: {{cluster_vms.results|json_query(query)|first}}{% endif %}"
+    #   vars:
+    #     query: "[?vmid==`{{ item.value.vmid }}`].item.value.node"
+    #   loop: "{{ config.core_vms |dict2items}}"
+
+    - name: Block to Deploy our systems
+      block:
+        - name: Clone the template
+          community.general.proxmox_kvm:
+            api_user: root@pam
+            api_password:  "{{ lookup('hashi_vault', 'secret=homelab/data/shared').root_password}}"
+            api_host: "{{ config.lab.api_host}}"      
+            clone: "{{ item.value.node }}-{{ item.value.template }}"
+            name: "{{ item.key }}"
+            node: "{{ item.value.node }}"
+            storage: ceph-vm
+            full: true
+            newid: "{{ item.value.vmid }}"
+            timeout: 500
+          loop: "{{ config.core_vms |dict2items}}"
+     
+        - name: Update the VM
+          community.general.proxmox_kvm:
+            api_user: root@pam
+            api_password:  "{{ lookup('hashi_vault', 'secret=homelab/data/shared').root_password}}"
+            api_host: "{{ config.lab.api_host}}"
+            node: "{{ item.value.node}}"
+            name: "{{ item.key }}"
+            cicustom: "user=ds1618:snippets/{{ item.key }}-user-config.yaml,vendor=ds1618:snippets/agent_install-vendor-config.yaml"
+            ciuser: ubuntu
+            cipassword: example
+            ipconfig:
+              ipconfig0: "ip={{ item.value.ipv4 }},gw={{ item.value.gateway }}"
+            tags: "{{ item.value.tags }}"
+            cores: "{{ item.value.cores }}"
+            vcpus: "{{ item.value.vcpus }}"
+            sockets: "{{ item.value.sockets }}"
+            memory: "{{ item.value.memory }}"
+            nameservers: "{{ config.lab.dns }}"
+            protection: false
+            update: true
+          vars:
+            query: "[?vmid==`{{ item.value.vmid }}`].item.value.node"
+          loop: "{{ config.core_vms |dict2items}}"
+          ignore_errors: true
+
+        - name: Start VMs
+          community.general.proxmox_kvm:
+            api_user: root@pam
+            api_password:  "{{ lookup('hashi_vault', 'secret=homelab/data/shared').root_password}}"
+            api_host: "{{ config.lab.api_host}}"
+            name: "{{ item.key }}"
+            state: started
+          loop: "{{ config.core_vms |dict2items}}"
