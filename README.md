@@ -9,10 +9,15 @@ Packer, Terraform, and Ansible code to run a three node clustered Proxmox Home L
 * [Ansible](https://www.ansible.com/)
 * [Proxmox](https://www.proxmox.com/en/)
 * [Hashicorp Vault](https://www.vaultproject.io/)
+* [Proxmoxer Python Library](https://pypi.org/project/proxmoxer/)
 
 ## Assumptions
 
 Three node Proxmox cluster installed with shared storage.
+
+### Automation and Responsibilities
+
+1. Terraform will handle 
 
 ## Order of Operations
 

@@ -11,5 +11,5 @@ resource "local_file" "ansible_inventory" {
       fqdn    = local.config.lab.fqdn
     }
   )
-  filename = "../ansible/lab-inventory.ini"
+  filename = "../../ansible/lab-inventory.ini"
 }
