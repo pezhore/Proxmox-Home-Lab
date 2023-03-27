@@ -1,4 +1,5 @@
 resource "proxmox_virtual_environment_vm" "ubuntu_jammy" {
+  for_each = toset(local.config.lab.nodes)
   agent {
     enabled = true
   }
@@ -45,7 +46,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_jammy" {
 
   name = "jammy-template"
 
-  node_name = data.proxmox_virtual_environment_nodes.lab.names[0]
+  node_name = each.key
 
   operating_system {
     type = "l26"
@@ -61,7 +62,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_jammy" {
   serial_device {}
 
   template = true
-  vm_id    = 2040
+  vm_id    = (2050 + index(local.config.lab.nodes, each.value))
 
 
   lifecycle {
@@ -80,7 +81,7 @@ resource "proxmox_virtual_environment_vm" "core" {
   tags      = ["terraform", "ubuntu"]
 
   clone {
-    vm_id = proxmox_virtual_environment_vm.ubuntu_jammy.id
+    vm_id = proxmox_virtual_environment_vm.ubuntu_jammy[each.value.node].id
   }
 
   memory {
@@ -127,6 +128,7 @@ resource "proxmox_virtual_environment_vm" "core" {
       ipv6_addresses,
       network_interface_names,
       initialization,
+      clone,
     ]
   }
 

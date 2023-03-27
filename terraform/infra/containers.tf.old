@@ -1,4 +1,5 @@
-resource "proxmox_virtual_environment_container" "example_template" {
+resource "proxmox_virtual_environment_container" "focal_template" {
+  for_each = toset(local.config.lab.nodes)
   description = "Managed by Terraform"
 
   disk {
@@ -11,7 +12,7 @@ resource "proxmox_virtual_environment_container" "example_template" {
       server = "1.1.1.1"
     }
 
-    hostname = "terraform-provider-proxmox-example-lxc-template"
+    hostname = "ubuntu-focal-lxc-template"
 
     ip_config {
       ipv4 {
@@ -29,16 +30,16 @@ resource "proxmox_virtual_environment_container" "example_template" {
     name = "vmbr0"
   }
 
-  node_name = data.proxmox_virtual_environment_nodes.lab.names[0]
+  node_name = each.key
 
   operating_system {
-    template_file_id = proxmox_virtual_environment_file.ubuntu_container_template.id
+    template_file_id = proxmox_virtual_environment_file.ubuntu_container_template["focal"].id
     type             = "ubuntu"
   }
 
   pool_id  = proxmox_virtual_environment_pool.lab.id
   template = true
-  vm_id    = 2042
+  vm_id    = (2030 + index(local.config.lab.nodes, each.value))
 
   tags = [
     "container",
@@ -47,20 +48,27 @@ resource "proxmox_virtual_environment_container" "example_template" {
   ]
 }
 
-resource "proxmox_virtual_environment_container" "example" {
+resource "proxmox_virtual_environment_container" "containers" {
+  for_each = local.config.containers
   disk {
     datastore_id = local.container_ds
   }
 
   clone {
-    vm_id = proxmox_virtual_environment_container.example_template.id
+    vm_id = proxmox_virtual_environment_container.focal_template[each.value.node].id
   }
 
   initialization {
-    hostname = "terraform-provider-proxmox-example-lxc"
+    hostname = each.key
+    
+    ip_config {
+      ipv4 {
+        address = each.value.ipv4
+      }
+    }
   }
 
-  node_name = data.proxmox_virtual_environment_nodes.lab.names[0]
+  node_name = each.value.node
   pool_id   = proxmox_virtual_environment_pool.lab.id
-  vm_id     = 2043
+  vm_id     = each.value.vm_id
 }

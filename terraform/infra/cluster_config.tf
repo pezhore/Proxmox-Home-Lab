@@ -4,7 +4,7 @@ resource "proxmox_virtual_environment_pool" "lab" {
 }
 
 resource "proxmox_virtual_environment_time" "lab" {
-  for_each  = local.config.lab.nodes
+  for_each  = toset(local.config.lab.nodes)
   node_name = each.key
   time_zone = local.config.lab.tz
 }

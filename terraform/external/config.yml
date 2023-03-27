@@ -1,8 +1,8 @@
 lab:
   nodes:
-    pve-01:
-    pve-02:
-    pve-03:
+    - pve-01
+    - pve-02
+    - pve-03
   dns:
     - 10.0.0.19
   tz: America/Chicago
@@ -51,6 +51,10 @@ lab:
 cloud_images:
   focal:
   jammy:
+container_images:
+  bionic: http://download.proxmox.com/images/system/ubuntu-18.04-standard_18.04.1-1_amd64.tar.gz
+  focal: http://download.proxmox.com/images/system/ubuntu-20.04-standard_20.04.1-1_amd64.tar.gz
+  jammy: http://download.proxmox.com/images/system/ubuntu-22.04-standard_22.04.1-1_amd64.tar.gz
 core_vms:
   powerdns:
     template: ubuntu-2204-template
@@ -121,3 +125,125 @@ core_vms:
           bridge: vmbr0
     ipv4: 10.0.0.243/24
     gateway: 10.0.0.1
+  k8s-master:
+    template: ubuntu-2204-template
+    node: pve-01
+    description: Kubernetes Master for Lab
+    os_type: ubuntu
+    cores: 2
+    sockets: 1
+    memory: 2048
+    vm_id: 104
+    scsihw: virtio-scsi-pci
+    dynamic:
+      disks:
+        disk0:
+          size: 30G
+          storage: cephfs
+          type: scsi
+          format: qcow2
+      networks:
+        net0:
+          model: virtio
+          bridge: vmbr0
+    ipv4: 10.0.0.65/24
+    gateway: 10.0.0.1
+  k8s-worker-01:
+    template: ubuntu-2204-template
+    node: pve-01
+    description: Kubernetes Worker for Lab
+    os_type: ubuntu
+    cores: 2
+    sockets: 1
+    memory: 2048
+    vm_id: 105
+    scsihw: virtio-scsi-pci
+    dynamic:
+      disks:
+        disk0:
+          size: 30G
+          storage: cephfs
+          type: scsi
+          format: qcow2
+      networks:
+        net0:
+          model: virtio
+          bridge: vmbr0
+    ipv4: 10.0.0.66/24
+    gateway: 10.0.0.1
+  k8s-worker-02:
+    template: ubuntu-2204-template
+    node: pve-01
+    description: Kubernetes Worker for Lab
+    os_type: ubuntu
+    cores: 2
+    sockets: 1
+    memory: 2048
+    vm_id: 106
+    scsihw: virtio-scsi-pci
+    dynamic:
+      disks:
+        disk0:
+          size: 30G
+          storage: cephfs
+          type: scsi
+          format: qcow2
+      networks:
+        net0:
+          model: virtio
+          bridge: vmbr0
+    ipv4: 10.0.0.67/24
+    gateway: 10.0.0.1
+  k8s-worker-03:
+    template: ubuntu-2204-template
+    node: pve-01
+    description: Kubernetes Worker for Lab
+    os_type: ubuntu
+    cores: 2
+    sockets: 1
+    memory: 2048
+    vm_id: 107
+    scsihw: virtio-scsi-pci
+    dynamic:
+      disks:
+        disk0:
+          size: 30G
+          storage: cephfs
+          type: scsi
+          format: qcow2
+      networks:
+        net0:
+          model: virtio
+          bridge: vmbr0
+    ipv4: 10.0.0.68/24
+    gateway: 10.0.0.1
+  k8s-worker-04:
+    template: ubuntu-2204-template
+    node: pve-01
+    description: Kubernetes Worker for Lab
+    os_type: ubuntu
+    cores: 2
+    sockets: 1
+    memory: 2048
+    vm_id: 108
+    scsihw: virtio-scsi-pci
+    dynamic:
+      disks:
+        disk0:
+          size: 30G
+          storage: cephfs
+          type: scsi
+          format: qcow2
+      networks:
+        net0:
+          model: virtio
+          bridge: vmbr0
+    ipv4: 10.0.0.69/24
+    gateway: 10.0.0.1
+containers:
+  wireguard:
+    ipv4: 10.0.0.122/24
+    gateway: 10.0.0.1
+    node: pve-01
+    image: jammy
+    vm_id: 2048

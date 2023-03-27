@@ -5,7 +5,7 @@
 # Ansible.
 
 resource "local_file" "ansible_inventory" {
-  content = templatefile("external/inventory.tmpl",
+  content = templatefile("../external/inventory.tmpl",
     {
       lab_vms = proxmox_virtual_environment_vm.core
       fqdn    = local.config.lab.fqdn
