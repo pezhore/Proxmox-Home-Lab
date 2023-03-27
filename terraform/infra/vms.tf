@@ -44,7 +44,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_jammy" {
     vendor_data_file_id = proxmox_virtual_environment_file.vendor_config.id
   }
 
-  name = "jammy-template"
+  name = "${each.key}-jammy-template"
 
   node_name = each.key
 
@@ -67,7 +67,9 @@ resource "proxmox_virtual_environment_vm" "ubuntu_jammy" {
 
   lifecycle {
     ignore_changes = [
-      initialization,
+      ipv4_addresses,
+      ipv6_addresses,
+      network_interface_names,
     ]
   }
 }
@@ -77,7 +79,7 @@ resource "proxmox_virtual_environment_vm" "core" {
   name      = each.key
   node_name = each.value.node
   pool_id   = proxmox_virtual_environment_pool.lab.id
-  vm_id     = each.value.vm_id
+  vm_id     = each.value.vmid
   tags      = ["terraform", "ubuntu"]
 
   clone {
