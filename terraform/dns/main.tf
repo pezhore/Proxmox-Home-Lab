@@ -8,6 +8,13 @@ resource "powerdns_zone" "lan_pezlab_dev" {
   ]
 }
 
+resource "powerdns_zone" "lan_pezlab_dev_slave" {
+  name         = "lan.pezlab.dev."
+  kind         = "Slave"
+  masters = ["10.0.0.241"]
+  provider = powerdns.secondary
+}
+
 resource "powerdns_zone" "reverse_lan_pezlab_dev" {
   name         = "10.in-addr.arpa."
   kind         = "Master"
@@ -16,6 +23,13 @@ resource "powerdns_zone" "reverse_lan_pezlab_dev" {
     "pdns-1.lan.pezlab.dev.",
     "pdns-2.lan.pezlab.dev."
   ]
+}
+
+resource "powerdns_zone" "reverse_lan_pezlab_dev_slave" {
+  name         = "10.in-addr.arpa."
+  kind         = "Slave"
+  masters = ["10.0.0.241"]
+  provider = powerdns.secondary
 }
 
 resource "powerdns_record" "ns1_lan_pezlab_dev" {
