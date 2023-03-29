@@ -281,7 +281,7 @@
       with_items:
         - dnsdist
     
-    - name: Set the content of dnsdist.conf
+    - name: Set the content of dnsdist.conf for primary
       ansible.builtin.copy:
         dest: /etc/dnsdist/dnsdist.conf
         content: |
@@ -302,8 +302,33 @@
           addAction("lan.pezlab.dev.", PoolAction('auth'))
           addAction(NetmaskGroupRule(recursive_ips), PoolAction('recursor'))
         group: _dnsdist
+      when: inventory_hostname in groups['pdns_primary']
       notify: restart_dnsdist
     
+    - name: Set the content of dnsdist.conf for secondary
+      ansible.builtin.copy:
+        dest: /etc/dnsdist/dnsdist.conf
+        content: |
+          setSecurityPollSuffix("")
+          setLocal('10.0.0.242:53')
+          setACL({'0.0.0.0/0', '::/0'}) -- Allow all IPs access
+
+          newServer({address='127.0.0.1:5300', pool='auth'})
+          newServer({address='127.0.0.1:5301', pool='recursor'})
+          newServer({address='10.0.0.241:5300', name='master', pool={'master'}})
+
+          recursive_ips = newNMG()
+          recursive_ips:addMask('10.0.0.0/8') -- These network masks are the ones from allow-recursion in the Authoritative Server
+
+          addAction(OrRule({QTypeRule(DNSQType.SOA), QTypeRule(DNSQType.AXFR),QTypeRule(DNSQType.IXFR)}), PoolAction('auth'))
+          addAction(AndRule({OrRule({QTypeRule(DNSQType.AXFR), QTypeRule(DNSQType.IXFR)})}), PoolAction('auth'))
+
+          addAction("lan.pezlab.dev.", PoolAction('auth'))
+          addAction(NetmaskGroupRule(recursive_ips), PoolAction('recursor'))
+        group: _dnsdist
+      when: inventory_hostname not in groups['pdns_primary']
+      notify: restart_dnsdist
+
     - name: Clone PowerDNS admin repo
       ansible.builtin.git:
         repo: https://github.com/ngoduykhanh/PowerDNS-Admin.git
