@@ -1,0 +1,458 @@
+---
+- hosts: pdns
+  become: true
+  vars_files: ./powerdns-ansible-vars.yml
+
+  vars:
+    primary: pdns-1.lan.pezlab.dev
+    import_schema: false
+    install_nginx: false
+    flask_db_upgrade: false
+    yarn_install: false
+    flask_build_assets: false
+    clone_pdnsadmin: false
+
+  pre_tasks:
+    - name: Add Yarn apt key
+      apt_key:
+        url: https://dl.yarnpkg.com/debian/pubkey.gpg
+
+    - name: Add Yarn repository
+      apt_repository:
+        repo: "deb https://dl.yarnpkg.com/debian/ stable main"
+        filename: yarn
+
+    - name: Install pre-requisites
+      ansible.builtin.apt: 
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - mariadb-server
+        - build-essential
+        - net-tools
+        - libmysqlclient-dev
+        - libsasl2-dev
+        - libldap2-dev
+        - libssl-dev
+        - libxml2-dev
+        - libxslt1-dev
+        - libxmlsec1-dev
+        - libffi-dev
+        - pkg-config
+        - apt-transport-https
+        - virtualenv
+        - python3-pip
+        - python3-venv
+        - python3-dev
+        - yarn
+        - nodejs
+        - npm
+        
+    - name: Install pymysql pip
+      ansible.builtin.pip:
+        name: pymysql
+        state: present
+
+    - name: Copy Cert
+      copy:
+        content: "{{ powerdns_tls_cert }}"
+        dest: /etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem
+    
+    - name: Copy Key
+      copy:
+        content: "{{ powerdns_tls_key }}"
+        dest: /etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem
+
+  roles:
+  - role: geerlingguy.nginx
+    vars:
+      nginx_remove_default_vhost: true
+      nginx_vhosts:
+        - listen: "80"
+          server_name: "_"
+          return: "301 https://$host$request_uri"
+          filename: "powerdns.80.conf"
+        - listen: "443 ssl"
+          server_name: "powerdns.lan.pezlab.dev"
+          extra_parameters: |
+            add_header X-Frame-Options DENY;
+            ssl_certificate           /etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem;
+            ssl_certificate_key       /etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem;
+
+            ssl_session_cache  builtin:1000  shared:SSL:10m;
+            ssl_protocols TLSv1.2 TLSv1.3;
+            ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
+            ssl_prefer_server_ciphers off;
+            add_header Strict-Transport-Security "max-age=63072000" always;
+            ssl_stapling on;
+            ssl_stapling_verify on;
+            location / {
+              proxy_pass http://unix:/run/pdnsadmin/socket;
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection "upgrade";
+              proxy_set_header Host $http_host;
+
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto https;
+              proxy_set_header X-Nginx-Proxy true;
+
+              proxy_redirect off;
+            }
+    when: install_nginx
+
+  post_tasks:
+    - name: Disable and stop systemd-resolved service
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: stopped
+        enabled: no
+    
+    - name: Ensure the /etc/resolv.conf file is not a link
+      ansible.builtin.file:
+        path: /etc/resolv.conf
+        state: absent
+        force: yes
+
+    - name: set the content of /etc/resolv.conf
+      ansible.builtin.copy:
+        dest: /etc/resolv.conf
+        content: |
+          nameserver 10.0.0.19
+
+    - name: secure mariadb
+      become: yes
+      expect:
+        command: mysql_secure_installation
+        responses:
+          'Enter current password for root': ''
+          'Set root password': 'n'
+          'Remove anonymous users': 'y'
+          'Disallow root login remotely': 'y'
+          'Remove test database': 'y'
+          'Reload privilege tables now': 'y'
+        timeout: 1
+      register: secure_mariadb
+      failed_when: "'... Failed!' in secure_mariadb.stdout_lines"
+
+    - name: Create the powerdns database
+      community.mysql.mysql_db:
+        name: powerdns
+        state: present
+        login_unix_socket: /run/mysqld/mysqld.sock
+    
+    - name: Create the powerdns sql user
+      community.mysql.mysql_user:
+        state: present
+        name: powerdns
+        password: "{{ lookup('hashi_vault', 'secret=homelab/data/software/pdns').sql_powerdns}}"
+        priv:
+          'powerdns.*': 'ALL,GRANT'
+        login_unix_socket: /run/mysqld/mysqld.sock
+
+
+    - name: install PowerDNS Recursor and Resolver
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - pdns-recursor
+        - pdns-server
+        - pdns-backend-mysql
+
+
+    - name: Set schema
+      community.mysql.mysql_db:
+        name: powerdns
+        state: import
+        target: /usr/share/pdns-backend-mysql/schema/schema.mysql.sql
+        login_unix_socket: /run/mysqld/mysqld.sock
+      when: import_schema
+
+    - name: Set the mysql conf file content
+      ansible.builtin.copy:
+        dest: /etc/powerdns/pdns.d/pdns.local.gmysql.conf
+        content: |
+          # MySQL Configuration
+          # Launch gmysql backend
+          launch+=gmysql
+          # gmysql parameters
+          gmysql-host=localhost
+          gmysql-port=3306
+          gmysql-dbname=powerdns
+          gmysql-user=powerdns
+          gmysql-password={{ lookup('hashi_vault', 'secret=homelab/data/software/pdns').sql_powerdns}}
+          gmysql-dnssec=yes
+        owner: pdns
+        group: pdns
+        mode: 0640
+      notify:
+        - restart_powerdns
+
+    - name: Set the primary pdns config
+      ansible.builtin.copy:
+        dest: /etc/powerdns/pdns.conf
+        content: |
+          allow-axfr-ips=0.0.0.0/0,::/0
+          allow-notify-from=0.0.0.0/0,::/0
+          api=yes
+          api-key={{ lookup('hashi_vault', 'secret=homelab/data/software/pdns').pdns_api_key}}
+          include-dir=/etc/powerdns/pdns.d
+          launch=
+          local-address=127.0.0.1
+          local-port=5300
+          master=yes
+          security-poll-suffix=
+          trusted-notification-proxy=127.0.0.1
+        owner: pdns
+        group: pdns
+      when: inventory_hostname in groups['pdns_primary']
+      notify: restart_powerdns
+    
+    - name: set the secondary pdns config
+      ansible.builtin.copy:
+        dest: /etc/powerdns/pdns.conf
+        content: |
+          allow-axfr-ips=0.0.0.0/0,::/0
+          allow-notify-from=0.0.0.0/0,::/0
+          api=yes
+          api-key={{ lookup('hashi_vault', 'secret=homelab/data/software/pdns').pdns_api_key}}
+          autosecondary=yes
+          include-dir=/etc/powerdns/pdns.d
+          launch=
+          local-address=127.0.0.1
+          local-port=5300
+          master=no
+          secondary=yes
+          security-poll-suffix=
+          slave=yes
+          slave-cycle-interval=60
+          trusted-notification-proxy=127.0.0.1
+        owner: pdns
+        group: pdns
+      when: inventory_hostname not in groups['pdns_primary']
+      notify: restart_powerdns
+
+    - name: Set the primary pdns recursor config
+      ansible.builtin.copy:
+        dest: /etc/powerdns/recursor.conf
+        content: |
+          allow-from=127.0.0.0/8, 10.0.0.0/8
+          config-dir=/etc/powerdns
+          forward-zones=lan.pezlab.dev=127.0.0.1:53
+          hint-file=/usr/share/dns/root.hints
+          include-dir=/etc/powerdns/recursor.d
+          local-address=127.0.0.1
+          local-port=5301
+          lua-config-file=/etc/powerdns/recursor.lua
+          public-suffix-list-file=/usr/share/publicsuffix/public_sufffix_list.dat
+          quiet=yes
+          security-poll-suffix=
+        owner: pdns
+        group: pdns
+      when: inventory_hostname in groups['pdns_primary']
+      notify: restart_powerdns_recursor
+    
+    - name: set the secondary pdns recursor config
+      ansible.builtin.copy:
+        dest: /etc/powerdns/recursor.conf
+        content: |
+          allow-from=127.0.0.0/8, 10.0.0.0/8
+          config-dir=/etc/powerdns
+          forward-zones=lan.pezlab.dev=127.0.0.1:53
+          hint-file=/usr/share/dns/root.hints
+          include-dir=/etc/powerdns/recursor.d
+          local-address=127.0.0.1
+          local-port=5301
+          lua-config-file=/etc/powerdns/recursor.lua
+          public-suffix-list-file=/usr/share/publicsuffix/public_sufffix_list.dat
+          quiet=yes
+          security-poll-suffix=
+        owner: pdns
+        group: pdns
+      when: inventory_hostname not in groups['pdns_primary']
+      notify: restart_powerdns_recursor
+
+    - name: Install DNSDist
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - dnsdist
+    
+    - name: Set the content of dnsdist.conf
+      ansible.builtin.copy:
+        dest: /etc/dnsdist/dnsdist.conf
+        content: |
+          setSecurityPollSuffix("")
+          setLocal('10.0.0.241:53')
+          setACL({'0.0.0.0/0', '::/0'}) -- Allow all IPs access
+
+          newServer({address='127.0.0.1:5300', pool='auth'})
+          newServer({address='127.0.0.1:5301', pool='recursor'})
+          newServer({address='10.0.0.241:5300', name='master', pool={'master'}})
+
+          recursive_ips = newNMG()
+          recursive_ips:addMask('10.0.0.0/8') -- These network masks are the ones from allow-recursion in the Authoritative Server
+
+          addAction(OrRule({QTypeRule(DNSQType.SOA), QTypeRule(DNSQType.AXFR),QTypeRule(DNSQType.IXFR)}), PoolAction('auth'))
+          addAction(AndRule({OrRule({QTypeRule(DNSQType.AXFR), QTypeRule(DNSQType.IXFR)})}), PoolAction('auth'))
+
+          addAction("lan.pezlab.dev.", PoolAction('auth'))
+          addAction(NetmaskGroupRule(recursive_ips), PoolAction('recursor'))
+        group: _dnsdist
+      notify: restart_dnsdist
+    
+    - name: Clone PowerDNS admin repo
+      ansible.builtin.git:
+        repo: https://github.com/ngoduykhanh/PowerDNS-Admin.git
+        dest: /var/www/html/pdns/
+      when: clone_pdnsadmin
+
+    - name: Install requirements
+      ansible.builtin.pip: 
+        requirements: /var/www/html/pdns/requirements.txt
+        virtualenv: /var/www/html/pdns/flask
+        virtualenv_python: python3
+    
+    - name: set default config for powerdns admin
+      ansible.builtin.copy:
+        dest: /var/www/html/pdns/powerdnsadmin/default_config.py
+        content: |
+          import os
+          import urllib.parse
+          basedir = os.path.abspath(os.path.dirname(__file__))
+          SALT = '{{ lookup('hashi_vault', 'secret=homelab/data/software/pdns').pdnsadmin_salt}}'
+          SECRET_KEY = '{{ lookup('hashi_vault', 'secret=homelab/data/software/pdns').pdnsadmin_secret_key}}'
+          BIND_ADDRESS = '0.0.0.0'
+          PORT = 9191
+          HSTS_ENABLED = False
+          SESSION_TYPE = 'sqlalchemy'
+          SESSION_COOKIE_SAMESITE = 'Lax'
+          CSRF_COOKIE_HTTPONLY = True
+          CAPTCHA_ENABLE = True
+          CAPTCHA_LENGTH = 6
+          CAPTCHA_WIDTH = 160
+          CAPTCHA_HEIGHT = 60
+          CAPTCHA_SESSION_KEY = 'captcha_image'
+          SQLA_DB_USER = 'powerdns'
+          SQLA_DB_PASSWORD = '{{ lookup('hashi_vault', 'secret=homelab/data/software/pdns').sql_powerdns}}'
+          SQLA_DB_HOST = '127.0.0.1'
+          SQLA_DB_NAME = 'powerdns'
+          SQLALCHEMY_TRACK_MODIFICATIONS = True
+          SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'pdns.db')
+          SAML_ENABLED = False
+          SAML_ASSERTION_ENCRYPTED = True
+      
+    - name: Run Flask DB Upgrade
+      ansible.builtin.shell: /var/www/html/pdns/flask/bin/flask db upgrade
+      args:
+        chdir: /var/www/html/pdns
+      environment:
+        - FLASK_APP: powerdnsadmin/__init__.py
+      when: flask_db_upgrade
+
+    - name: Run yarn install
+      ansible.builtin.shell: yarn install --pure-lockfile
+      args:
+        chdir: /var/www/html/pdns
+      when: yarn_install
+    
+    - name: Build assets with flask
+      ansible.builtin.shell: /var/www/html/pdns/flask/bin/flask assets build
+      args:
+        chdir: /var/www/html/pdns
+      environment:
+        - FLASK_APP: powerdnsadmin/__init__.py
+      when: flask_build_assets
+
+    - name: Create run folder
+      ansible.builtin.file:
+        path: /run/pdnsadmin
+        state: directory
+        owner: pdns
+    
+    - name: set our tmp files conf
+      ansible.builtin.copy:
+        dest: /etc/tmpfiles.d/pdnsadmin.conf
+        content: "d /run/pdnsadmin 0755 pdns pdns -"
+    
+    - name: Chown the pdnsadmin folder
+      ansible.builtin.shell: chown -R pdns:pdns /var/www/html/pdns/powerdnsadmin/
+        
+    - name: Create pdnsadmin service
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/pdnsadmin.service
+        content: |
+          [Unit]
+          Description=PowerDNS-Admin
+          Requires=pdnsadmin.socket
+          After=network.target
+
+          [Service]
+          PIDFile=/run/pdnsadmin/pid
+          User=pdns
+          Group=pdns
+          WorkingDirectory=/var/www/html/pdns
+          ExecStart=/var/www/html/pdns/flask/bin/gunicorn --pid /run/pdnsadmin/pid --bind unix:/run/pdnsadmin/socket 'powerdnsadmin:create_app()'
+          ExecReload=/bin/kill -s HUP $MAINPID
+          ExecStop=/bin/kill -s TERM $MAINPID
+          PrivateTmp=true
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+      notify: restart pdnsadmin
+  
+    - name: Create pdnsadmin socket
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/pdnsadmin.socket
+        content: |
+          [Unit]
+          Description=PowerDNS-Admin socket
+
+          [Socket]
+          ListenStream=/run/pdnsadmin/socket
+
+          [Install]
+          WantedBy=sockets.target
+        owner: root
+        group: root
+      notify: restart pdnsadmin socket
+
+  handlers:
+    - name: apt update
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: restart_powerdns
+      ansible.builtin.systemd:
+        name: pdns
+        state: restarted
+        enabled: yes
+
+    - name: restart_powerdns_recursor
+      ansible.builtin.systemd:
+        name: pdns-recursor
+        state: restarted
+        enabled: yes
+    
+    - name: restart_dnsdist
+      ansible.builtin.systemd:
+        name: dnsdist
+        state: restarted
+        enabled: yes
+    
+    - name: restart pdnsadmin
+      ansible.builtin.systemd:
+        name: pdnsadmin
+        state: restarted
+        enabled: yes
+    
+    - name: restart pdnsadmin  socket
+      ansible.builtin.systemd:
+        name: pdnsadmin.socket
+        state: restarted
+        enabled: yes
