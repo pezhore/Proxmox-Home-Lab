@@ -1,3 +1,2 @@
-"powerdns_public_domain": "powerdns.lan.pezlab.dev"
 "powerdns_tls_cert": "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert}}"
 "powerdns_tls_key": "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey}}"
