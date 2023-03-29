@@ -68,11 +68,12 @@ resource "proxmox_virtual_environment_file" "ubuntu" {
 }
 
 resource "proxmox_virtual_environment_file" "ubuntu_container_template" {
+  for_each = local.config.container_images
   content_type = "vztmpl"
   datastore_id = local.file_ds
   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
 
   source_file {
-    path = "http://download.proxmox.com/images/system/ubuntu-18.04-standard_18.04.1-1_amd64.tar.gz"
+    path = each.value
   }
 }

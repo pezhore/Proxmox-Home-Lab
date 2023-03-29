@@ -1,5 +1,5 @@
 [Lab]%{for i,inst in lab_vms}
-${i}.${fqdn} ansible_host=${inst.ipv4_addresses[1][0]}%{endfor}
+${i}.${fqdn} ansible_host=${inst.ipv4}%{endfor}
 
 [all:vars]
 ansible_port = 22

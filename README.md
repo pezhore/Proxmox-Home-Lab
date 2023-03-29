@@ -9,10 +9,26 @@ Packer, Terraform, and Ansible code to run a three node clustered Proxmox Home L
 * [Ansible](https://www.ansible.com/)
 * [Proxmox](https://www.proxmox.com/en/)
 * [Hashicorp Vault](https://www.vaultproject.io/)
+* [Proxmoxer Python Library](https://pypi.org/project/proxmoxer/)
 
 ## Assumptions
 
 Three node Proxmox cluster installed with shared storage.
+
+### Automation and Responsibilities
+
+Terraform will handle:
+
+- Template creation
+- Envfiles (for cloudinit,etc)
+- Base cluster config
+- Ansible lab inventory file generation
+- DNS zones, records, etc
+
+Ansible will handle:
+
+- Actual Vm deployment
+- Software configuration and installation
 
 ## Order of Operations
 
@@ -22,7 +38,7 @@ Three node Proxmox cluster installed with shared storage.
 4. `scp` the network configuration and apply (setting up the proper bond/bridge interfaces)
 5. Configure Ceph
 6. Configure NFS share for Synology DS1618
-7. Run Terraform to do things
+7. Run Terraform to do things, then Ansible, and maybe Terraform again.
 
 ## Known Issues
 
@@ -40,6 +56,18 @@ qm set 9000 --serial0 socket --vga serial0
 
 Proxmox really doesn't like to have multiple VMs created from the same template simulateously. to fix this, add
 `-parallelism=1` to the `terraform apply` command.
+
+### PowerDNS
+
+To generate a new salt for powerdns admin:
+
+```
+source flask/bin/activate
+export FLASK_APP=./powerdnsadmin/__init__.py
+python -c 'import bcrypt; print(bcrypt.gensalt().decode())'
+```
+
+Still working on how to get PowerDNS to defer to PiHole for adblocking...
 
 ## Acknowledgements
 
