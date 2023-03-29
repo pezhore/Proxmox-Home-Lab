@@ -58,9 +58,36 @@ container_images:
   focal: http://download.proxmox.com/images/system/ubuntu-20.04-standard_20.04.1-1_amd64.tar.gz
   jammy: http://download.proxmox.com/images/system/ubuntu-22.04-standard_22.04.1-1_amd64.tar.gz
 core_vms:
-  powerdns:
+  pdns-1:
     template: jammy-template
     node: pve-03
+    description: PowerDNS server for Lab
+    os_type: ubuntu
+    cores: 2
+    sockets: 1
+    vcpus: 1
+    memory: 2048
+    vmid: 100
+    tags:
+      - ansible
+      - ubuntu
+    scsihw: virtio-scsi-pci
+    dynamic:
+      disks:
+        disk0:
+          size: 30G
+          storage: ceph-vm
+          type: scsi
+          format: qcow2
+      networks:
+        net0:
+          model: virtio
+          bridge: vmbr0
+    ipv4: 10.0.0.241
+    gateway: 10.0.0.1
+  pdns-2:
+    template: jammy-template
+    node: pve-02
     description: PowerDNS server for Lab
     os_type: ubuntu
     cores: 2
@@ -83,7 +110,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.241/24
+    ipv4: 10.0.0.242
     gateway: 10.0.0.1
   netbox:
     template: jammy-template
@@ -110,7 +137,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.40/24
+    ipv4: 10.0.0.40
     gateway: 10.0.0.1
   freeipa:
     template: jammy-template
@@ -137,7 +164,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.243/24
+    ipv4: 10.0.0.243
     gateway: 10.0.0.1
   k8s-master:
     template: jammy-template
@@ -152,6 +179,7 @@ core_vms:
     tags:
       - ansible
       - ubuntu
+      - kubernetes
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
@@ -164,7 +192,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.65/24
+    ipv4: 10.0.0.65
     gateway: 10.0.0.1
   k8s-worker-01:
     template: jammy-template
@@ -179,6 +207,7 @@ core_vms:
     tags:
       - ansible
       - ubuntu
+      - kubernetes
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
@@ -191,7 +220,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.66/24
+    ipv4: 10.0.0.66
     gateway: 10.0.0.1
   k8s-worker-02:
     template: jammy-template
@@ -206,6 +235,7 @@ core_vms:
     tags:
       - ansible
       - ubuntu
+      - kubernetes
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
@@ -218,7 +248,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.67/24
+    ipv4: 10.0.0.67
     gateway: 10.0.0.1
   k8s-worker-03:
     template: jammy-template
@@ -233,6 +263,7 @@ core_vms:
     tags:
       - ansible
       - ubuntu
+      - kubernetes
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
@@ -245,7 +276,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.68/24
+    ipv4: 10.0.0.68
     gateway: 10.0.0.1
   k8s-worker-04:
     template: jammy-template
@@ -260,6 +291,7 @@ core_vms:
     tags:
       - ansible
       - ubuntu
+      - kubernetes
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
@@ -272,7 +304,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.69/24
+    ipv4: 10.0.0.69
     gateway: 10.0.0.1
 ansible_core_vms:
   k8s-worker-05:
@@ -288,6 +320,7 @@ ansible_core_vms:
     tags:
       - ansible
       - ubuntu
+      - kubernetes
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
@@ -300,7 +333,7 @@ ansible_core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.70/24
+    ipv4: 10.0.0.70
     gateway: 10.0.0.1 
   k8s-worker-06:
     template: jammy-template
@@ -315,6 +348,7 @@ ansible_core_vms:
     tags:
       - ansible
       - ubuntu
+      - kubernetes
     scsihw: virtio-scsi-pci
     dynamic:
       disks:
@@ -327,11 +361,11 @@ ansible_core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.71/24
+    ipv4: 10.0.0.71
     gateway: 10.0.0.1
 containers:
   wireguard:
-    ipv4: 10.0.0.122/24
+    ipv4: 10.0.0.122
     gateway: 10.0.0.1
     node: pve-01
     image: jammy

@@ -46,6 +46,16 @@ qm set 9000 --serial0 socket --vga serial0
 Proxmox really doesn't like to have multiple VMs created from the same template simulateously. to fix this, add
 `-parallelism=1` to the `terraform apply` command.
 
+### PowerDNS
+
+If you follow online instructions and want to swap out the salt (which you totally should) - you'll need to use the flask app to generate a valid salt:
+
+```
+source flask/bin/activate
+export FLASK_APP=./powerdnsadmin/__init__.py
+python -c 'import bcrypt; print(bcrypt.gensalt().decode())'
+```
+
 ## Acknowledgements
 
 * Packer templates based on work by [Julien Brochet](https://github.com/aerialls/madalynn-packer)

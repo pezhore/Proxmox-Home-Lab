@@ -78,7 +78,7 @@
             ciuser: ubuntu
             cipassword: example
             ipconfig:
-              ipconfig0: "ip={{ item.value.ipv4 }},gw={{ item.value.gateway }}"
+              ipconfig0: "ip={{ item.value.ipv4 }}/24,gw={{ item.value.gateway }}"
             tags: "{{ item.value.tags }}"
             cores: "{{ item.value.cores }}"
             vcpus: "{{ item.value.vcpus }}"
