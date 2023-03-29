@@ -48,13 +48,15 @@ Proxmox really doesn't like to have multiple VMs created from the same template 
 
 ### PowerDNS
 
-If you follow online instructions and want to swap out the salt (which you totally should) - you'll need to use the flask app to generate a valid salt:
+To generate a new salt for powerdns admin:
 
 ```
 source flask/bin/activate
 export FLASK_APP=./powerdnsadmin/__init__.py
 python -c 'import bcrypt; print(bcrypt.gensalt().decode())'
 ```
+
+Still working on how to get PowerDNS to defer to PiHole for adblocking...
 
 ## Acknowledgements
 

@@ -11,6 +11,7 @@
     yarn_install: false
     flask_build_assets: false
     clone_pdnsadmin: false
+    pihole_ipv4: 10.0.0.19
 
   pre_tasks:
     - name: Add Yarn apt key
