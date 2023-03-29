@@ -7,10 +7,10 @@
     primary: pdns-1.lan.pezlab.dev
     import_schema: false
     install_nginx: false
-    flask_db_upgrade: false
-    yarn_install: false
-    flask_build_assets: false
-    clone_pdnsadmin: false
+    flask_db_upgrade: true
+    yarn_install: true
+    flask_build_assets: true
+    clone_pdnsadmin: true
     pihole_ipv4: 10.0.0.19
 
   pre_tasks:

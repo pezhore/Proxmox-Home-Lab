@@ -1,4 +1,4 @@
-# k#################################################
+##################################################
 # data.tf
 #
 # This file contains the data sources for the Terraform configuration.
@@ -19,7 +19,7 @@ data "http" "github_ssh_keys" {
   url = "https://github.com/pezhore.keys"
 }
 
-##############3
+##############
 # Proxmox things
 data "proxmox_virtual_environment_nodes" "lab" {}
 
