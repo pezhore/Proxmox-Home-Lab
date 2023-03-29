@@ -448,6 +448,23 @@
         group: root
       notify: restart pdnsadmin socket
 
+    - name: Set supermasters in database
+      community.mysql.mysql_query:
+        login_db: powerdns
+        query: SELECT * from powerdns.supermasters;
+        login_unix_socket: /run/mysqld/mysqld.sock
+      register: supermasters
+      when: inventory_hostname not in groups['pdns_primary']
+
+    
+    - name: Set our Supermasters
+      community.mysql.mysql_query:
+        login_db: powerdns
+        query: INSERT INTO powerdns.supermasters VALUES ('10.0.0.241', 'pdns-1.lan.pezlab.dev', 'admin');
+        login_unix_socket: /run/mysqld/mysqld.sock
+      when: inventory_hostname not in groups['pdns_primary'] and supermasters.query_result | length > 0
+      notify: restart_pdns
+
   handlers:
     - name: apt update
       ansible.builtin.apt:
