@@ -17,7 +17,18 @@ Three node Proxmox cluster installed with shared storage.
 
 ### Automation and Responsibilities
 
-1. Terraform will handle 
+Terraform will handle:
+
+- Template creation
+- Envfiles (for cloudinit,etc)
+- Base cluster config
+- Ansible lab inventory file generation
+- DNS zones, records, etc
+
+Ansible will handle:
+
+- Actual Vm deployment
+- Software configuration and installation
 
 ## Order of Operations
 
@@ -27,7 +38,7 @@ Three node Proxmox cluster installed with shared storage.
 4. `scp` the network configuration and apply (setting up the proper bond/bridge interfaces)
 5. Configure Ceph
 6. Configure NFS share for Synology DS1618
-7. Run Terraform to do things
+7. Run Terraform to do things, then Ansible, and maybe Terraform again.
 
 ## Known Issues
 
