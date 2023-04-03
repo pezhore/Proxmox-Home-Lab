@@ -1,0 +1,16 @@
+- hosts: all
+  become: true
+
+  tasks:
+    
+    - name: Set the ubuntu user's password to the password stored in vault
+      ansible.builtin.user:
+        name: ubuntu
+        password: "{{ lookup('hashi_vault', 'secret=homelab/data/general').ubuntu| password_hash('sha512') }}"
+
+    - name: Install various apt packages
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - vim
