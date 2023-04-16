@@ -1,13 +1,13 @@
-# Homelab Documentation
+# Home lab Documentation
 
 ## Overview
 
-This is a collection of documentation for my homelab - it is a work in progress. I have two goals for my homelab:
+This is a collection of documentation for my home lab - it is a work in progress. I have two goals for my home lab:
 
-1. Provide a learning space for new-to-me techonologies/tools.
+1. Provide a learning space for new-to-me technologies/tools.
 2. House tooling that I use in the rest of my home network (DNS, Ad Blocking, etc).
 
-As my home network relies upon systems in this homelab, I strive for a certain level of security, resiliency, and ease of use.
+As my home network relies upon systems in this home lab, I strive for a certain level of security, resiliency, and ease of use.
 
 ## Hardware
 
@@ -54,7 +54,7 @@ The three Lenovo systems are running Proxmox in a cluster configuration.
 There are additional systems in the mix:
 
 - ClusterHAT Raspberry Pi 4, with 4x Raspberry Pi Zero Ws - currently housing a four node Hashicorp Vault instance.
-- Raspbery Pi 4 running PiHole
+- Raspberry Pi 4 running PiHole
 - Dell Tower running Ubuntu Server - This will be decommissioned as the various services are migrated to the Proxmox
   cluster.
 
