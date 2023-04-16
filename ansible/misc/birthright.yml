@@ -14,6 +14,55 @@
         state: present
       with_items:
         - vim
+        - zsh
+        - git
+        - jq
+
+    - name: Install Oh-My-zsh for users
+      git:
+        repo: "https://github.com/robbyrussell/oh-my-zsh"
+        dest: "/home/ubuntu/.oh-my-zsh"
+        version: master
+        update: no
+
+    - name: Set default shell for users
+      become: yes
+      user:
+        name: ubuntu
+        shell: /bin/zsh
+
+    - name: Download file to .zshrc in home directory
+      ansible.builtin.get_url:
+        url: https://gist.githubusercontent.com/pezhore/2256118850af1090ccab701ed834c424/raw/.zshrc
+        dest: /home/ubuntu/.zshrc
+        owner: ubuntu
+        group: ubuntu
+        mode: 0644
+
+    - name: Download file to .zsh_alises in home directory
+      ansible.builtin.get_url:
+        url: https://gist.githubusercontent.com/pezhore/2256118850af1090ccab701ed834c424/raw/.zsh_aliases
+        dest: /home/ubuntu/.zsh_aliases
+        owner: ubuntu
+        group: ubuntu
+        mode: 0644
+
+    - name: Download file to .tmux.conf in home directory
+      ansible.builtin.get_url:
+        url: https://gist.githubusercontent.com/pezhore/2256118850af1090ccab701ed834c424/raw/.tmux.conf
+        dest: /home/ubuntu/.tmux.conf
+        owner: ubuntu
+        group: ubuntu
+        mode: 0644
+
+    - name: Download file to .tmux.conf.local in home directory
+      ansible.builtin.get_url:
+        url: https://gist.githubusercontent.com/pezhore/2256118850af1090ccab701ed834c424/raw/.tmux.conf.local
+        dest: /home/ubuntu/.tmux.conf.local
+        owner: ubuntu
+        group: ubuntu
+        mode: 0644
+
 
     - name: Set content of our /etc/systemd/resolved.conf file
       ansible.builtin.copy:
@@ -28,7 +77,6 @@
         mode: 0644
       notify: restart systemd-resolved
       when: inventory_hostname not in groups['pdns']
-
 
   handlers:
     - name: restart systemd-resolved
