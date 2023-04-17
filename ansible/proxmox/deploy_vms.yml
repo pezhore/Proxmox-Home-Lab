@@ -85,6 +85,7 @@
             sockets: "{{ item.value.sockets }}"
             memory: "{{ item.value.memory }}"
             nameservers: "{{ config.lab.dns }}"
+            scsi:  "{{ item.value.disks.scsi0 }}"
             protection: false
             update: true
           vars:
