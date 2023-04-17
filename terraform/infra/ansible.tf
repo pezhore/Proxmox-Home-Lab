@@ -7,6 +7,7 @@
 resource "local_file" "ansible_inventory" {
   content = templatefile("../external/inventory.tmpl",
     {
+      groups  = local.config.ansible_groups
       lab_vms = local.config.core_vms
       fqdn    = local.config.lab.fqdn
     }
