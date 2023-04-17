@@ -72,13 +72,13 @@ core_vms:
       - ansible
       - ubuntu
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 16G
+        storage: ceph-vm
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
@@ -99,13 +99,13 @@ core_vms:
       - ansible
       - ubuntu
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 16G
+        storage: ceph-vm
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
@@ -126,13 +126,13 @@ core_vms:
       - ansible
       - ubuntu
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 16G
+        storage: ceph-vm
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
@@ -153,13 +153,13 @@ core_vms:
       - ansible
       - ubuntu
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 16G
+        storage: ceph-vm
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
@@ -181,13 +181,13 @@ core_vms:
       - ubuntu
       - kubernetes
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 88G
+        storage: ds1618
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
@@ -209,13 +209,13 @@ core_vms:
       - ubuntu
       - kubernetes
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 168G
+        storage: ds1618
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
@@ -237,13 +237,13 @@ core_vms:
       - ubuntu
       - kubernetes
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 168G
+        storage: ds1618
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
@@ -265,13 +265,13 @@ core_vms:
       - ubuntu
       - kubernetes
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 168G
+        storage: ds1618
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
@@ -293,75 +293,74 @@ core_vms:
       - ubuntu
       - kubernetes
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 168G
+        storage: ds1618
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
           bridge: vmbr0
     ipv4: 10.0.0.69
     gateway: 10.0.0.1
-ansible_core_vms:
-  k8s-worker-05:
+  minecraft:
     template: jammy-template
     node: pve-03
-    description: Kubernetes Worker for Lab
+    description: Minecraft server
     os_type: ubuntu
     cores: 2
     sockets: 2
     vcpus: 2
     memory: 4096
-    vmid: 109
+    vmid: 210
     tags:
       - ansible
       - ubuntu
-      - kubernetes
+      - minecraft
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 30G
+        storage: ceph-vm
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.70
-    gateway: 10.0.0.1 
-  k8s-worker-06:
+    ipv4: 10.0.0.30
+    gateway: 10.0.0.1
+  docker:
     template: jammy-template
-    node: pve-02
-    description: Kubernetes Worker for Lab
+    node: pve-03
+    description: Minecraft server
     os_type: ubuntu
     cores: 2
     sockets: 2
     vcpus: 2
     memory: 4096
-    vmid: 110
+    vmid: 211
     tags:
       - ansible
       - ubuntu
-      - kubernetes
+      - docker
     scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 60G
+        storage: ceph-vm
+        type: scsi
+        format: qcow2
     dynamic:
-      disks:
-        disk0:
-          size: 30G
-          storage: ceph-vm
-          type: scsi
-          format: qcow2
       networks:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.71
+    ipv4: 10.0.0.31
     gateway: 10.0.0.1
 containers:
   wireguard:
