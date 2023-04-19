@@ -36,6 +36,10 @@
       debug:
         msg: "{{ cluster_vms.results}}" # | json_query('[?vmid==`100`].item.value.node') }}"
     
+    - name: dump output to file
+      copy:
+        content: "{{ cluster_vms.results }}"
+        dest: dump.json
 
     - name: Loop through and find our nodes
       debug:

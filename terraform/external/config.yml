@@ -71,6 +71,8 @@ ansible_groups:
     - k8s-worker-04
   kubernetes_master:
     - k8s-master
+  minecraft:
+    - minecraft
 core_vms:
   pdns-1:
     template: jammy-template
