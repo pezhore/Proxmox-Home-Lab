@@ -1,0 +1,17 @@
+[Unit]
+Description=Minecraft Server
+
+Wants=network.target
+After=network.target
+
+[Service]
+User=minecraft
+Group=minecraft
+SuccessExitStatus=0 1
+
+WorkingDirectory=/var/minecraft/server
+ExecStart=/usr/bin/java -Xmx1024M -Xms1024M -jar spigot.jar --noconsole
+ExecStop=/usr/local/bin/mcrcon -H localhost -P $port -p $password stop
+
+[Install]
+WantedBy=multi-user.target

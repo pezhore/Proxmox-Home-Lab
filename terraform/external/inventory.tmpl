@@ -1,6 +1,14 @@
 [Lab]%{for i,inst in lab_vms}
 ${i}.${fqdn} ansible_host=${inst.ipv4}%{endfor}
 
+%{ for i,group in groups ~}
+[${i}]
+%{ for j, vm in group ~}
+${vm}.${fqdn} ansible_host=${lab_vms[vm].ipv4}
+%{ endfor ~}
+
+%{ endfor ~}
+
 [all:vars]
 ansible_port = 22
 ansible_user = ubuntu

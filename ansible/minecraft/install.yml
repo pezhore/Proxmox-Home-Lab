@@ -1,0 +1,204 @@
+---
+- hosts: minecraft
+  become: true
+  vars_files: ./minecraft-ansible-vars.yml
+
+  vars:
+    reinstall_mcrcon: true
+    install_nginx: true
+
+  pre_tasks:
+    - name: Add openjdk repository
+      ansible.builtin.apt_repository:
+        repo: ppa:openjdk-r/ppa
+    
+    - name: Install openjdk-17-jre-headless
+      ansible.builtin.apt:
+        name: openjdk-17-jre-headless
+        state: present
+        update_cache: yes
+    
+    - name: Install gcc
+      ansible.builtin.apt:
+        name: gcc
+        state: present
+        update_cache: yes
+
+    - name: Create a minecraft group
+      ansible.builtin.group:
+        name: minecraft
+        state: present
+
+    - name: Create a minecraft user
+      ansible.builtin.user:
+        name: minecraft
+        group: minecraft
+        shell: /bin/bash
+        home: /var/minecraft
+        createhome: yes
+        system: yes
+        state: present
+
+    - name: Ensure various minecraft directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: minecraft
+        group: minecraft
+      loop:
+        - /var/minecraft/backup
+        - /var/minecraft/build
+        - /var/minecraft/backup/server
+        - /var/minecraft/build/spigot
+        - /var/minecraft/server
+
+    - name: Copy up the spigot_update.sh file
+      ansible.builtin.copy:
+        src: spigot_update.sh
+        dest: /var/minecraft/build/spigot/update.sh
+        mode: 0755
+    
+    - name: run spigot update script
+      ansible.builtin.command: /var/minecraft/build/spigot/update.sh
+      args:
+        chdir: /var/minecraft/build/spigot
+        creates: /var/minecraft/server/spigot.jar
+    
+    - name: See if mcron exists in /usr/local/bin
+      ansible.builtin.stat:
+        path: /usr/local/bin/mcrcon
+      register: mcrcon_bin
+
+    - name: Install mcron
+      block:
+        - name: Clone the mcrcon repo
+          ansible.builtin.git:
+            repo: git://git.code.sf.net/p/mcrcon/code
+            dest: /tmp/mcrcon
+
+        - name: Build mcron
+          ansible.builtin.command: gcc -o mcrcon mcrcon.c
+          args:
+            chdir: /tmp/mcrcon
+            creates: /tmp/mcrcon/mcrcon
+        
+        - name: Copy mcron to /usr/local/bin
+          ansible.builtin.copy:
+            src: /tmp/mcrcon/mcrcon
+            dest: /usr/local/bin/mcrcon
+            remote_src: true
+            mode: 0755
+            owner: root
+            group: root
+      when: not mcrcon_bin.stat.exists or reinstall_mcrcon
+
+    - name: Copy minecraft.service file
+      ansible.builtin.copy:
+        src: minecraft.service
+        dest: /etc/systemd/system/minecraft.service
+        mode: 0644
+        owner: root
+        group: root
+      notify: systemd daemon-reload
+
+    - name: Download minecraft server
+      ansible.builtin.get_url:
+        url: "{{ jar_url }}"
+        dest: /var/minecraft/server/{{jar_version}}-server.jar
+        mode: 0755
+        owner: minecraft
+        group: minecraft
+    
+    - name: Determine if eula.txt exists
+      ansible.builtin.stat:
+        path: /var/minecraft/server/eula.txt
+      register: mc_eula_file
+
+    - name: Run jar when eula not exists (max 60 seconds)
+      ansible.builtin.shell:
+        chdir: /var/minecraft/server/
+        cmd: timeout 60 java -Xmx1024M -Xms512M -jar {{jar_version}}-server.jar nogui
+      become_user: minecraft
+      ignore_errors: yes
+      when: mc_eula_file.stat.exists == False
+
+    - name: Agree to eula
+      ansible.builtin.lineinfile:
+        path: /var/minecraft/server/eula.txt
+        line: 'eula=true'
+        regexp: '^eula='
+        mode: '0444'
+        owner: minecraft
+        group: minecraft
+  
+    - name: Copy up the server.properties file
+      ansible.builtin.template:
+        src: server.properties.j2
+        dest: /var/minecraft/server/server.properties
+        mode: '0600'
+        owner: minecraft
+        group: minecraft
+    
+    - name: Chown recursively /var/minecraft to minecraft user
+      ansible.builtin.command: chown -R minecraft:minecraft /var/minecraft
+
+    - name: Enable and start minecraft service
+      ansible.builtin.service:
+        name: minecraft
+        enabled: yes
+        state: started
+
+    - name: Copy Cert
+      copy:
+        content: "{{ wildcard_tls_cert }}"
+        dest: /etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem
+    
+    - name: Copy Key
+      copy:
+        content: "{{ wildcard_tls_key }}"
+        dest: /etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem
+
+  roles:
+  - role: geerlingguy.nginx
+    vars:
+      nginx_remove_default_vhost: true
+      nginx_vhosts:
+        - listen: "80"
+          server_name: "_"
+          return: "301 https://$host$request_uri"
+          filename: "minecraft.80.conf"
+        - listen: "443 ssl"
+          server_name: "minecraft.lan.pezlab.dev"
+          extra_parameters: |
+            add_header X-Frame-Options DENY;
+            ssl_certificate           /etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem;
+            ssl_certificate_key       /etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem;
+
+            ssl_session_cache  builtin:1000  shared:SSL:10m;
+            ssl_protocols TLSv1.2 TLSv1.3;
+            ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
+            ssl_prefer_server_ciphers off;
+            add_header Strict-Transport-Security "max-age=63072000" always;
+            ssl_stapling on;
+            ssl_stapling_verify on;
+            location / {
+              proxy_pass http://127.0.0.1:8123/;
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection "upgrade";
+              proxy_set_header Host $http_host;
+
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto https;
+              proxy_set_header X-Nginx-Proxy true;
+
+              proxy_redirect off;
+            }
+    when: install_nginx
+
+  
+  handlers:
+    - name: systemd daemon-reload
+      ansible.builtin.systemd:
+        daemon_reload: yes

@@ -25,24 +25,28 @@
         api_password:  "{{ lookup('hashi_vault', 'secret=homelab/data/shared').root_password}}"
         api_host: "{{ config.lab.api_host}}"    
         state: current
-        name: "{{ item.key }}"
+        vmid: "{{ item.value.vmid }}"
         node: pve-01
       register: cluster_vms
       loop: "{{ config.core_vms |dict2items}}"
       ignore_errors: true
 
 ### This whole thing was an effort to mitigate errors when migrating/balancing vms. it doesn't work really - vms appear to be on a different host than what they actual are
-    # - name: debug message where the results json vmid is 103
-    #   debug:
-    #     msg: "{{ cluster_vms.results | json_query('[?vmid==`103`].item.value.node') }}"
+    - name: debug message where the results json vmid is 100
+      debug:
+        msg: "{{ cluster_vms.results}}" # | json_query('[?vmid==`100`].item.value.node') }}"
     
+    - name: dump output to file
+      copy:
+        content: "{{ cluster_vms.results }}"
+        dest: dump.json
 
-    # - name: Loop through and find our nodes
-    #   debug:
-    #     msg: "vm: {{item.key}} --- confnode: {{item.value.node}} --- actual_node:{{ cluster_vms.results | json_query(query) }}"
-    #   vars:
-    #     query: "[?vmid==`{{ item.value.vmid }}`].item.value.node"
-    #   loop: "{{ config.core_vms |dict2items}}"
+    - name: Loop through and find our nodes
+      debug:
+        msg: "vm: {{item.key}} --- confnode: {{item.value.node}} --- actual_node:{{ cluster_vms.results | json_query(query) }}"
+      vars:
+        query: "[?vmid==`{{ item.value.vmid }}`].item.value.node"
+      loop: "{{ config.core_vms |dict2items}}"
 
     # - name: debug message to check node position
     #   debug:
