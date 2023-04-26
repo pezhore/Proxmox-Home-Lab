@@ -1,0 +1,20 @@
+---
+- hosts: pdns
+  become: true
+  vars_files: ./powerdns-ansible-vars.yml
+
+  tasks:    
+    - name: Set supermasters in database
+      community.mysql.mysql_query:
+        login_db: powerdns
+        query: SELECT * from powerdns.supermasters;
+        login_unix_socket: /run/mysqld/mysqld.sock
+      register: supermasters
+      when: inventory_hostname not in groups['pdns_primary']
+
+    
+    - name: Debug
+      debug:
+        msg: "NO SUPER MASTERS"
+      when: inventory_hostname not in groups['pdns_primary'] and supermasters.query_result is defined
+
