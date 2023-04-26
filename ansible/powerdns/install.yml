@@ -56,13 +56,17 @@
 
     - name: Copy Cert
       copy:
-        content: "{{ powerdns_tls_cert }}"
+        content: "{{ wildcard_tls_cert }}"
         dest: /etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem
+      notify:
+        - restart nginx
     
     - name: Copy Key
       copy:
-        content: "{{ powerdns_tls_key }}"
+        content: "{{ wildcard_tls_key }}"
         dest: /etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem
+      notify:
+        - restart nginx
 
   roles:
   - role: geerlingguy.nginx
@@ -469,6 +473,12 @@
     - name: apt update
       ansible.builtin.apt:
         update_cache: yes
+
+    - name: restart nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
 
     - name: restart_powerdns
       ansible.builtin.systemd:
