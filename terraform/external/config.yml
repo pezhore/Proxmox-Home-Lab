@@ -350,24 +350,24 @@ core_vms:
           bridge: vmbr0
     ipv4: 10.0.0.30
     gateway: 10.0.0.1
-  docker:
+  plex:
     template: jammy-template
     node: pve-03
-    description: Minecraft server
+    description: Plex Server
     os_type: ubuntu
     cores: 2
-    sockets: 2
+    sockets: 4
     vcpus: 2
-    memory: 4096
-    vmid: 211
+    memory: 8192
+    vmid: 212
     tags:
       - ansible
       - ubuntu
-      - docker
+      - plex
     scsihw: virtio-scsi-pci
     disks:
       scsi0:
-        size: 60G
+        size: 50G
         storage: ceph-vm
         type: scsi
         format: qcow2
