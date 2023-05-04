@@ -1,0 +1,127 @@
+#!/bin/bash
+
+set -e
+
+# Add our AWS Access/Secret variables for wasabi S3
+AWS_ACCESS_KEY_ID=$(vault kv get -mount=homelab -field=terraform_access_key wasabi )
+AWS_SECRET_ACCESS_KEY=$(vault kv get -mount=homelab -field=terraform_secret_key wasabi)
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in 
+        -h|--help)
+            shift;
+            gethelp=true;
+            break
+            ;;
+        -d|--destroy)
+            shift;
+            destroy=true
+            break
+            ;;
+        -a|--apply)
+            shift;
+            apply=true
+            break
+            ;;
+        --)
+            shift;
+            break;
+            ;;
+        *)
+            echo "$1 is not a valid option"
+            exit 3;
+            ;;
+    esac
+done
+
+function eval_tf (){
+  terraform show -json tfplan.binary > tfplan.json
+
+  printf "\n\n"
+printf "  ________________________________\n"
+printf " / \                               \.\n"
+printf "|   |      ,                 ,     |. \n"
+printf " \_ |    ,,                  ,,,   |.\n"
+printf "    |   ,,,      ///####      ,,,  |.\n"
+printf "    |  ,,,,,,///////########,,,,,  |.\n"
+printf "    |    ,,/////////#########(,,   |.\n"
+printf "    |     /////////   ########     |.\n"
+printf "    |     //////////##########     |.\n"
+printf "    |     //////////##########     |.\n"
+printf "    |       ////////########.      |.\n"
+printf "    |            ///####           |.\n"
+printf "    |              /##             |.\n"
+printf "    |                              |.\n"
+printf "    |       Open Policy Agent      |.\n"
+printf "    |      Evaluation Results      |.\n"
+printf "    |   ___________________________|___\n"
+printf "    |  /                              /.\n"
+printf "    \_/______________________________/.\n"
+
+
+  # Perform Open Policy Agent evaluations
+  AUTHZ=$(opa eval --format pretty --data $SCRIPT_DIR/terraform.rego -i tfplan.json data.terraform.analysis.authz)
+  SCORE=$(opa eval --format pretty --data $SCRIPT_DIR/terraform.rego -i tfplan.json data.terraform.analysis.score)
+
+  printf "\nYour terraform plan generated the score $SCORE.\n"
+  if [[ "$AUTHZ" == "true" ]]; then
+      printf "\n\nYour changes are approved by OPA to take affect.\n\n"
+  else
+      printf "\n\nCAUTION: Your changes have not been automatically approved! See below for details:\n\n"
+      opa eval -f pretty --explain=notes  --data $SCRIPT_DIR/terraform.rego --input tfplan.json "authorized = data.terraform.analysis.authz; violations = data.terraform.analysis.violation"
+      printf "\n\n"
+  fi
+
+
+  if [[ "$SCORE" != "0" ]]; then
+    # Visualize the plan
+    terraform-visual --plan tfplan.json
+    xdg-open terraform-visual-report/index.html
+  fi
+
+}
+
+# print help if asked for and exit
+if [[ $gethelp ]]; then
+  cat << HALPPLZ
+plan-it.sh [-h|--help] [-d|--destroy] [-a|--apply]
+  
+  Terraform plan evaluator script.
+
+Options:
+    -h, --help          Displays this help and exits
+    -d, --destroy       Generate a destroy plan, evaluate with OPA, and output the resulting visualization
+    -a, --apply         Apply the current tfplan.binary
+    no options          Generates a plan, evaluates with OPA, and outputs the resulting visualization
+HALPPLZ
+  exit 1000;
+elif [[ $destroy ]]; then
+  echo "Generating a destroy plan."
+  terraform plan -destroy --out tfplan.binary
+  
+  if [ $? -eq 1 ] ;then
+    printf "\nTerraform plan failed. Validate your code and try again\n" >&2 
+    exit 1
+  fi
+
+  eval_tf
+
+elif [[ $apply ]]; then
+  echo "Applying the current tfplan.binary!"
+  terraform apply tfplan.binary
+  exit 0;
+else
+  echo "Generating the terraform plan"
+  # Output the plan and convert to json
+  terraform plan --out tfplan.binary
+
+  if [ $? -eq 1 ] ;then
+    printf "\nTerraform plan failed. Validate your code and try again\n" >&2 
+    exit 1
+  fi
+
+  eval_tf
+fi
+
