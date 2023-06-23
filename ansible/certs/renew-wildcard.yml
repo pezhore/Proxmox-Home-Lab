@@ -1,0 +1,82 @@
+---
+- name: Deal with Certbot and Lets Encrypt
+  hosts: netbox.lan.pezlab.dev #all
+  become: true
+
+  vars:
+    initial_setup: false
+    force: true
+    push_certs: true
+
+  tasks:
+    - name: Initial Setup on netbox only
+      block:
+        - name: Ensure the /root/.secrets directory exists
+          ansible.builtin.file:
+            path: /root/.secrets
+            state: directory
+            mode: 0700
+
+        - name: Create the /root/.secrets/cloudflare.ini file with content from vault
+          ansible.builtin.copy:
+            dest: /root/.secrets/cloudflare.ini
+            content: |
+              dns_cloudflare_email = "{{ lookup('hashi_vault', 'secret=homelab/data/services/cloudflare').email}}"
+              dns_cloudflare_api_key = "{{ lookup('hashi_vault', 'secret=homelab/data/services/cloudflare').global_api}}"
+            mode: 0440
+
+        - name: Install software properties
+          ansible.builtin.apt:
+            name: software-properties-common
+            state: present
+            update_cache: yes
+        
+        - name: Install Certbot
+          ansible.builtin.apt:
+            name: "{{ item }}"
+            state: present
+            update_cache: yes
+          with_items:
+            - certbot
+            - python3-certbot-dns-cloudflare
+        
+        - name: Execute command to do the dns thing
+          ansible.builtin.command: certbot certonly --dns-cloudflare --dns-cloudflare-credentials /root/.secrets/cloudflare.ini -d *.lan.pezlab.dev --preferred-challenges dns-01 --non-interactive --agree-tos -m "{{ lookup('hashi_vault', 'secret=homelab/data/services/cloudflare').email}}"
+          register: certbot
+        
+        - name: debug output
+          debug:
+            msg: "{{ certbot.stdout }}"
+            
+        - name: Slurp up the cert
+          ansible.builtin.slurp:
+            src: /etc/letsencrypt/live/lan.pezlab.dev/cert.pem
+          register: cert
+        
+        - name: Slurp up the chain
+          ansible.builtin.slurp:
+            src: /etc/letsencrypt/live/lan.pezlab.dev/chain.pem
+          register: chain
+        
+        - name: Slurp up the fullchain
+          ansible.builtin.slurp:
+            src: /etc/letsencrypt/live/lan.pezlab.dev/fullchain.pem
+          register: fullchain
+        
+        - name: Slurp up the privkey
+          ansible.builtin.slurp:
+            src: /etc/letsencrypt/live/lan.pezlab.dev/privkey.pem
+          register: privkey
+
+        - name: Push content of certs to vault
+          community.hashi_vault.vault_write:
+              path: homelab/data/certificates
+              data:
+                data:
+                  cert: "{{ cert.content | b64decode }}"
+                  chain: "{{ chain.content | b64decode }}"
+                  fullchain: "{{ fullchain.content | b64decode }}"
+                  privkey: "{{ privkey.content | b64decode }}"
+          become: false
+          delegate_to: localhost
+      when: inventory_hostname == "netbox.lan.pezlab.dev"
