@@ -3,8 +3,8 @@
 set -e
 
 # Add our AWS Access/Secret variables for wasabi S3
-AWS_ACCESS_KEY_ID=$(vault kv get -mount=homelab -field=terraform_access_key wasabi )
-AWS_SECRET_ACCESS_KEY=$(vault kv get -mount=homelab -field=terraform_secret_key wasabi)
+export AWS_ACCESS_KEY_ID=$(vault kv get -mount=homelab -field=terraform_access_key wasabi )
+export AWS_SECRET_ACCESS_KEY=$(vault kv get -mount=homelab -field=terraform_secret_key wasabi)
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
@@ -20,9 +20,19 @@ while [[ $# -gt 0 ]]; do
             destroy=true
             break
             ;;
+        -i|--init)
+            shift;
+            init=true
+            break
+            ;;
         -a|--apply)
             shift;
             apply=true
+            break
+            ;;
+        -r|--refresh)
+            shift;
+            refresh=true
             break
             ;;
         --)
@@ -107,10 +117,17 @@ elif [[ $destroy ]]; then
   fi
 
   eval_tf
-
+elif [[ $init ]]; then
+  echo "Initializing terraform"
+  terraform init
+  exit 0;
 elif [[ $apply ]]; then
   echo "Applying the current tfplan.binary!"
   terraform apply tfplan.binary
+  exit 0;
+elif [[ $refresh ]]; then
+  echo "Refreshing terraform state"
+  terraform apply -refresh-only
   exit 0;
 else
   echo "Generating the terraform plan"
