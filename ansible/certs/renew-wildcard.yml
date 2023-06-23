@@ -1,6 +1,6 @@
 ---
 - name: Deal with Certbot and Lets Encrypt
-  hosts: netbox.lan.pezlab.dev #all
+  hosts: netbox.lan.pezlab.dev
   become: true
 
   vars:
