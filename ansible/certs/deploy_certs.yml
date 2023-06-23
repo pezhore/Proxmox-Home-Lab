@@ -1,0 +1,167 @@
+---
+- name: Deploy certificates
+  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault
+  become: true
+
+  vars:
+    wildcard_cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert }}"
+    wildcard_chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').chain }}"
+    wildcard_fullchain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').fullchain }}"
+    wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey }}"
+  
+  tasks:
+    - name: Install certs to netbox
+      block:
+        - name: set content of Netbox certificate and key
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+          with_items:
+            - { dest: "/etc/ssl/certs/netbox.crt", content: "{{ wildcard_cert }}" }
+            - { dest: "/etc/ssl/private/netbox.key", content: "{{ wildcard_privkey }}" }
+          notify: restart nginx
+          no_log: true
+      when: inventory_hostname in groups['netbox']
+
+    - name: Install certs to minecraft
+      block:
+        - name: set contents of minecraft certificate and key
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+          with_items:
+            - { dest: "/etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem", content: "{{ wildcard_cert }}" }
+            - { dest: "/etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem", content: "{{ wildcard_privkey }}" }
+          no_log: true
+          notify: restart nginx
+      when: inventory_hostname in groups['minecraft']
+    
+    - name: Install certs to powerdns
+      block:
+        - name: set contents of pdns certificate and key
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+          with_items:
+            - { dest: "/etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem", content: "{{ wildcard_cert }}" }
+            - { dest: "/etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem", content: "{{ wildcard_privkey }}" }
+          no_log: true
+          notify: restart nginx
+      when: inventory_hostname in groups['pdns']
+
+    - name: Deploy certs to Proxmox
+      block:
+        - name: set contents of Proxmox node's certificate and key
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+          with_items:
+            - { dest: "/etc/pve/local/pve-ssl.pem", content: "{{ wildcard_cert }}" }
+            - { dest: "/etc/pve/local/pve-ssl.key", content: "{{ wildcard_privkey }}" }
+          no_log: true
+          notify: restart pveproxy
+      when: inventory_hostname in groups['proxmox']
+    
+    - name: Deploy certs to Pihole
+      block:
+        - name: set contents of Pihole's certificate and key
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+          with_items:
+            - { dest: "/etc/lighttpd/server.pem", content: "{{ wildcard_privkey }}{{ wildcard_cert }}" }
+          no_log: true
+          notify: restart lighttpd
+      when: inventory_hostname in groups['pihole']
+
+    - name: Install certs to plex
+      block:
+        - name: set contents of plex certificate and key
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+          with_items:
+            - { dest: "/etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem", content: "{{ wildcard_cert }}" }
+            - { dest: "/etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem", content: "{{ wildcard_privkey }}" }
+          no_log: true
+          notify: restart nginx
+      when: inventory_hostname in groups['plex']
+
+    - name: Install certs to Synology
+      block:
+        - name: Copy up print certs to remote site
+          ansible.builtin.copy:
+            dest: "~/"
+            src: print-certs.py
+            mode: 0700
+            owner: pezhore
+            group: users
+        
+        - name: Find nginx certificates using script
+          shell: "~/print-certs.py nginx -t *.lan.pezlab.dev -a"
+          register: find_nginx_certs
+        
+        # This is annoying...
+        - name: Set the contents of our Certificate
+          ansible.builtin.copy:
+            dest: "{{ item.0.split('::')[1] }}/{{ item.1 }}"
+            content: "{{ wildcard_cert }}"
+          with_nested:
+            - "{{ find_nginx_certs.stdout_lines }}"
+            - [ 'cert.pem' ]
+
+        - name: Set the contents of our Chain
+          ansible.builtin.copy:
+            dest: "{{ item.0.split('::')[1] }}/{{ item.1 }}"
+            content: "{{ wildcard_chain }}"
+          with_nested:
+            - "{{ find_nginx_certs.stdout_lines }}"
+            - [ 'chain.pem' ]
+
+        - name: Set the contents of our Fullchain
+          ansible.builtin.copy:
+            dest: "{{ item.0.split('::')[1] }}/{{ item.1 }}"
+            content: "{{ wildcard_fullchain }}"
+          with_nested:
+            - "{{ find_nginx_certs.stdout_lines }}"
+            - [ 'fullchain.pem' ]
+
+        - name: Set the contents of our private key
+          ansible.builtin.copy:
+            dest: "{{ item.0.split('::')[1] }}/{{ item.1 }}"
+            content: "{{ wildcard_privkey }}"
+          with_nested:
+            - "{{ find_nginx_certs.stdout_lines }}"
+            - [ 'privkey.pem' ]
+      notify: restart nginx
+      when: inventory_hostname in groups['synology']
+
+    - name: Install certs to Vault
+      block:
+        - name: set contents of Vault certificate and key
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+          with_items:
+            - { dest: "/etc/ssl/certs/vault.pezlab.local.cer", content: "{{ wildcard_cert }}" }
+            - { dest: "/etc/ssl/private/vault.pezlab.local.key", content: "{{ wildcard_privkey }}" }
+          no_log: true
+          notify: restart nginx
+      when: inventory_hostname in groups['vault']
+
+  handlers:
+    - name: restart nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
+    
+    - name: restart pveproxy
+      service:
+        name: pveproxy
+        state: restarted
+
+    - name: restart lighttpd
+      service:
+        name: lighttpd
+        state: restarted
