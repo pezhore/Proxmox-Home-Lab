@@ -10,7 +10,7 @@
     flask_db_upgrade: true
     yarn_install: true
     flask_build_assets: true
-    clone_pdnsadmin: true
+    clone_pdnsadmin: false
     pihole_ipv4: 10.0.0.19
 
   pre_tasks:
@@ -245,7 +245,8 @@
         content: |
           allow-from=127.0.0.0/8, 10.0.0.0/8
           config-dir=/etc/powerdns
-          forward-zones=lan.pezlab.dev=127.0.0.1:53
+          forward-zones=lan.pezlab.dev=127.0.0.1:5300
+          forward-zones-recurse=.=10.0.0.19
           hint-file=/usr/share/dns/root.hints
           include-dir=/etc/powerdns/recursor.d
           local-address=127.0.0.1
@@ -265,7 +266,8 @@
         content: |
           allow-from=127.0.0.0/8, 10.0.0.0/8
           config-dir=/etc/powerdns
-          forward-zones=lan.pezlab.dev=127.0.0.1:53
+          forward-zones=lan.pezlab.dev=127.0.0.1:5300
+          forward-zones-recurse=.=10.0.0.19
           hint-file=/usr/share/dns/root.hints
           include-dir=/etc/powerdns/recursor.d
           local-address=127.0.0.1
