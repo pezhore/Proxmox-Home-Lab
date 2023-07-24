@@ -73,6 +73,41 @@ ansible_groups:
     - k8s-master
   minecraft:
     - minecraft
+  k3s:
+    - k3s
+extra_dns:
+  keycloak:
+    ipv4: 10.0.0.243
+  erl3:
+    ipv4: 10.0.0.1
+  esw24:
+    ipv4: 10.0.0.2
+  ds1618:
+    ipv4: 10.0.0.16
+  pihole:
+    ipv4: 10.0.0.19
+  uckg2:
+    ipv4: 10.0.0.130
+  vault:
+    ipv4: 10.0.0.181
+  vault-1:
+    ipv4: 10.0.0.181
+  vault-2:
+    ipv4: 10.0.0.181
+  vault-3:
+    ipv4: 10.0.0.181
+  vault-4:
+    ipv4: 10.0.0.181
+  orbi-s:
+    ipv4: 10.0.0.5
+  tls-sg105e:
+    ipv4: 10.0.0.6
+  pve-01:
+    ipv4: 10.0.0.241
+  pve-02:
+    ipv4: 10.0.0.242
+  pve-03:
+    ipv4: 10.0.0.243
 core_vms:
   pdns-1:
     template: jammy-template
@@ -377,6 +412,34 @@ core_vms:
           model: virtio
           bridge: vmbr0
     ipv4: 10.0.0.31
+    gateway: 10.0.0.1
+  k3s:
+    template: jammy-template
+    node: pve-03
+    description: k3s host
+    os_type: ubuntu
+    cores: 2
+    sockets: 4
+    vcpus: 2
+    memory: 8192
+    vmid: 2412
+    tags:
+      - ansible
+      - ubuntu
+      - plex
+    scsihw: virtio-scsi-pci
+    disks:
+      scsi0:
+        size: 50G
+        storage: ceph-vm
+        type: scsi
+        format: qcow2
+    dynamic:
+      networks:
+        net0:
+          model: virtio
+          bridge: vmbr0
+    ipv4: 10.0.0.22
     gateway: 10.0.0.1
 containers:
   wireguard:
