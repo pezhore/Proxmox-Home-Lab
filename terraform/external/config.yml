@@ -103,11 +103,11 @@ extra_dns:
   tls-sg105e:
     ipv4: 10.0.0.6
   pve-01:
-    ipv4: 10.0.0.241
+    ipv4: 10.0.0.211
   pve-02:
-    ipv4: 10.0.0.242
+    ipv4: 10.0.0.212
   pve-03:
-    ipv4: 10.0.0.243
+    ipv4: 10.0.0.213
 core_vms:
   pdns-1:
     template: jammy-template
