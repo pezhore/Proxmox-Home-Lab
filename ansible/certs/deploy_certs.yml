@@ -1,6 +1,6 @@
 ---
 - name: Deploy certificates
-  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault
+  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault, ubiquiti
   become: true
 
   vars:
@@ -8,7 +8,7 @@
     wildcard_chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').chain }}"
     wildcard_fullchain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').fullchain }}"
     wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey }}"
-  
+
   tasks:
     - name: Install certs to netbox
       block:
@@ -35,7 +35,7 @@
           no_log: true
           notify: restart nginx
       when: inventory_hostname in groups['minecraft']
-    
+
     - name: Install certs to powerdns
       block:
         - name: set contents of pdns certificate and key
@@ -61,7 +61,7 @@
           no_log: true
           notify: restart pveproxy
       when: inventory_hostname in groups['proxmox']
-    
+
     - name: Deploy certs to Pihole
       block:
         - name: set contents of Pihole's certificate and key
@@ -96,11 +96,11 @@
             mode: 0700
             owner: pezhore
             group: users
-        
+
         - name: Find nginx certificates using script
           shell: "~/print-certs.py nginx -t *.lan.pezlab.dev -a"
           register: find_nginx_certs
-        
+
         # This is annoying...
         - name: Set the contents of our Certificate
           ansible.builtin.copy:
@@ -149,13 +149,35 @@
           notify: restart nginx
       when: inventory_hostname in groups['vault']
 
+    - name: Install certs on ubiquiti systems
+      block:
+        - name: Ensure the /config/auth/certificates directory exists
+          ansible.builtin.file:
+            path: /config/auth/certificates
+            state: directory
+
+        - name: set the bundle variable
+          ansible.builtin.set_fact:
+            wildcard_bundle: "{{ wildcard_cert }}\n{{ wildcard_privkey }}\n{{ wildcard_fullchain }}"
+
+        - name: Set the contents of the cert file
+          ansible.builtin.copy:
+            dest: /etc/lighttpd/server.pem
+            content: "{{ wildcard_bundle }}"
+            backup: true
+            owner: root
+            group: root
+          notify: restart lighttpd
+
+      when: inventory_hostname in groups['ubiquiti']
+
   handlers:
     - name: restart nginx
       ansible.builtin.systemd:
         name: nginx
         state: restarted
         enabled: yes
-    
+
     - name: restart pveproxy
       service:
         name: pveproxy
@@ -165,3 +187,9 @@
       service:
         name: lighttpd
         state: restarted
+
+    - name: restart lighttpd
+      ansible.builtin.systemd:
+        name: lighttpd
+        state: restart
+        enabled: yes

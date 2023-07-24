@@ -1,0 +1,15 @@
+{% for item in pve_01_vm_ids.stdout_lines %}
+{{ item.split(",")[0]  }}:
+    id: {{ item.split(",")[1] }}
+    host: pve-01
+{% endfor %}
+{% for item in pve_02_vm_ids.stdout_lines %}
+{{ item.split(",")[0]  }}:
+    id: {{ item.split(",")[1] }}
+    host: pve-02
+{% endfor %}
+{% for item in pve_03_vm_ids.stdout_lines %}
+{{ item.split(",")[0]  }}:
+    id: {{ item.split(",")[1] }}
+    host: pve-03
+{% endfor %}
