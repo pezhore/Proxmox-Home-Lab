@@ -62,7 +62,26 @@ module "core_records" {
     for vm, conf in local.config.core_vms : vm => conf
     if !contains(["pdns-1","pdns-2"], vm)
   }
-  
+
+  fwd_zone = powerdns_zone.lan_pezlab_dev.name
+  ptr_zone = powerdns_zone.reverse_lan_pezlab_dev.name
+  fqdn     = "${each.key}.${local.config.lab.fqdn}."
+  ttl      = 500
+  record   = each.value.ipv4
+}
+
+module "extra_records" {
+  depends_on = [
+    powerdns_record.ns1_lan_pezlab_dev,
+    powerdns_record.ns2_lan_pezlab_dev
+  ]
+
+  source = "./modules/dns_record"
+  for_each = {
+    for vm, conf in local.config.extra_dns : vm => conf
+    if !contains(["pdns-1","pdns-2"], vm)
+  }
+
   fwd_zone = powerdns_zone.lan_pezlab_dev.name
   ptr_zone = powerdns_zone.reverse_lan_pezlab_dev.name
   fqdn     = "${each.key}.${local.config.lab.fqdn}."
