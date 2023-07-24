@@ -1,0 +1,187 @@
+---
+- name: installing stuff
+  hosts: freeipa
+  become: true
+
+  vars:
+    update_certs: true
+    upgrade_system: true
+    install_docker: true
+
+  pre_tasks:
+    - name: Upgrade system block
+      block:
+        - name: Update apt-get repo and cache
+          ansible.builtin.apt:
+            update_cache: yes
+            force_apt_get: yes
+            cache_valid_time: 3600
+
+        - name: Upgrade all packages
+          ansible.builtin.apt:
+            upgrade: dist
+
+        - name: Check if reboot is required
+          stat: 
+            path: /var/run/reboot-required
+          register: reboot_required
+
+        - name: Reboot system if required
+          reboot:
+            msg: Rebooting to complete system upgrade
+            reboot_timeout: 120
+          when: reboot_required.stat.exists
+      when: upgrade_system
+
+    - name: Create keycloak group
+      ansible.builtin.group:
+        name: keycloak
+        state: present
+    
+    - name: Create keycloak user
+      ansible.builtin.user:
+        name: keycloak
+        group: keycloak
+        shell: /bin/bash
+        home: /opt/keycloak
+        createhome: yes
+        state: present
+
+    - name: Copy templated nginx.conf
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: /opt/keycloak/nginx.conf
+        owner: keycloak
+        group: keycloak
+
+    - name: Ensure keycloak certs directory exists
+      ansible.builtin.file:
+        path: /opt/keycloak/certs
+        state: directory
+        owner: keycloak
+        group: keycloak
+        mode: 0755
+
+    - name: Ensure keycloak postgres directory exists
+      ansible.builtin.file:
+        path: /opt/keycloak/postgresql_data
+        state: directory
+        owner: keycloak
+        group: keycloak
+        mode: 0755
+
+
+    - name: Block to update certs
+      block:
+        - name: "Retrieve SSL Cert"
+          set_fact:
+            cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert}}"
+        - name: "Retrieve SSL key"
+          set_fact:
+            key: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey}}"
+        - name: "Retrieve SSL chain"
+          set_fact:
+            chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').chain}}"
+
+        - name: Set ssl cert content
+          ansible.builtin.copy:
+            content: "{{ cert }}"
+            dest: /opt/keycloak/certs/_.lan.pezlab.dev.pem
+            owner: keycloak
+            group: keycloak
+
+        - name: Set ssl key content
+          ansible.builtin.copy:
+            content: "{{ key }}"
+            dest: /opt/keycloak/certs/_.lan.pezlab.dev.key
+            owner: keycloak
+            group: keycloak
+
+        - name: Set ssl cert content
+          ansible.builtin.copy:
+            content: "{{ chain }}"
+            dest: /opt/keycloak/certs/chain.crt
+            owner: keycloak
+            group: keycloak
+      when: update_certs
+
+  roles:
+    - role: geerlingguy.docker
+      vars:
+        docker_users:
+          - range
+          - keycloak
+        docker_install_compose: true
+        docker_compose_version: "v2.19.0"
+        docker_compose_arch: "{{ ansible_architecture }}"
+        docker_compose_path: /usr/local/bin/docker-compose
+      become: yes
+      when: install_docker
+
+  post_tasks:
+    - name: Setup keycloak docker-compose
+      ansible.builtin.template:
+        src: keycloak-docker-compose.yml.j2
+        dest: /opt/keycloak/docker-compose.yml
+        owner: keycloak
+        group: keycloak
+        mode: 0644
+
+    - name: Create docker-compose systemd file
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/keycloak-docker-compose.service
+        content: |
+          [Unit]
+          Description=Docker Compose Service for Keycloak
+          Requires=docker.service
+          After=docker.service
+          StartLimitIntervalSec=60
+
+          [Service]
+          WorkingDirectory=/opt/keycloak
+          ExecStart=/usr/local/bin/docker-compose up
+          ExecStop=/usr/local/bin/docker-compose down
+          TimeoutStartSec=0
+          Restart=on-failure
+          StartLimitBurst=3
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: 0644
+      notify: start keycloak docker-compose
+
+    - name: Check if the lazydockerbin exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/lazydocker
+      register: lazydockerbin
+      
+    - name: Download lazydocker bin for ease of management
+      block:
+        - name: Download lazydocker
+          ansible.builtin.get_url:
+            url: https://github.com/jesseduffield/lazydocker/releases/download/v0.20.0/lazydocker_0.20.0_Linux_x86_64.tar.gz
+            dest: /tmp
+
+        - name: Extract lazydocker
+          command: tar -xvf /tmp/lazydocker_0.20.0_Linux_x86_64.tar.gz lazydocker
+          args:
+            chdir: /tmp
+
+        - name: Move lazydocker to /usr/local/bin
+          ansible.builtin.copy:
+            src: /tmp/lazydocker
+            dest: /usr/local/bin
+            remote_src: true
+            mode: 0755
+          become: true
+      when: not lazydockerbin.stat.exists
+
+  handlers:
+    - name: start keycloak docker-compose
+      ansible.builtin.systemd:
+        daemon_reload: yes
+        name: keycloak-docker-compose
+        enabled: true
+        state: started

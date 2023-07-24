@@ -1,0 +1,42 @@
+# Copyright VMware, Inc.
+# SPDX-License-Identifier: APACHE-2.0
+
+version: '2'
+services:
+
+  postgresql:
+    image: docker.io/bitnami/postgresql:11
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - POSTGRESQL_USERNAME=bn_keycloak
+      - POSTGRESQL_DATABASE=bitnami_keycloak
+    volumes:
+      - '/opt/keycloak/postgresql_data:/bitnami/postgresql'
+
+  keycloak:
+    restart: unless-stopped
+    image: docker.io/bitnami/keycloak:21
+    expose:
+      - "8080"
+      - "8443"
+    environment:
+      - KEYCLOAK_ENABLE_HTTPS=true
+      - KEYCLOAK_HTTPS_USE_PEM=true
+      - KEYCLOAK_HTTPS_CERTIFICATE_FILE=/opt/bitnami/keycloak/certs/_.lan.pezlab.dev.pem
+      - KEYCLOAK_HTTPS_CERTIFICATE_KEY_FILE=/opt/bitnami/keycloak/certs/_.lan.pezlab.dev.key
+      - KC_FEATURES=declarative-user-profile
+
+    volumes:
+      - '/opt/keycloak/certs:/opt/bitnami/keycloak/certs'
+
+  nginx:
+    restart: unless-stopped
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8443:8443"
+    volumes:
+      - '/opt/keycloak/nginx.conf:/etc/nginx/nginx.conf'
+      - '/opt/keycloak/certs:/etc/ssl/private/keycloak'
