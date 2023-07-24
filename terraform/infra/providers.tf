@@ -15,10 +15,8 @@ terraform {
 }
 
 provider "proxmox" {
-  virtual_environment {
-    endpoint = "https://10.0.0.212:8006/"
-    username = "root@pam"
-    password = data.vault_generic_secret.shared.data["root_password"]
-    insecure = true
-  }
+  endpoint = "https://10.0.0.212:8006/"
+  username = "root@pam"
+  password = data.vault_generic_secret.shared.data["root_password"]
+  insecure = true
 }
