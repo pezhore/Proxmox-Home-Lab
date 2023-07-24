@@ -8,7 +8,7 @@ terraform {
 
 provider "powerdns" {
   api_key        = data.vault_generic_secret.pdns.data["terraform_key"]
-  server_url     = "https://powerdns.lan.pezlab.dev"
+  server_url     = "https://10.0.0.241"
   insecure_https = true
 }
 
