@@ -1,0 +1,18 @@
+---
+version: '3.5'
+services:
+  overseerr:
+    image: sctx/overseerr:latest
+    container_name: overseerr
+    environment:
+      - TZ={{ timezone }}
+    ports:
+      - 127.0.0.1:5055:5055
+    volumes:
+      - {{ root_dir }}/overseerr/config:/app/config
+    restart: unless-stopped
+    networks:
+      - arr
+networks:
+  arr:
+    name: arrnet

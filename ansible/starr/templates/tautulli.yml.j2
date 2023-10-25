@@ -1,0 +1,21 @@
+---
+version: "3"
+services:
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID={{ puid }}
+      - PGID={{ pgid }}
+      - TZ={{ timezone }}
+    volumes:
+      - {{ root_dir }}/tautulli/config:/config
+    ports:
+      - 127.0.0.1:8181:8181
+    restart: unless-stopped
+    networks:
+      - arrnet
+networks:
+  arrnet:
+    name: arrnet
+    external: true

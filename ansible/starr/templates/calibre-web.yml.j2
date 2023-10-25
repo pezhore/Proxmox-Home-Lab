@@ -1,0 +1,24 @@
+---
+version: "3"
+services:
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: calibre-web
+    environment:
+      - PUID={{ puid }}
+      - PGID={{ pgid }}
+      - TZ={{ timezone }}
+      - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
+      - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
+    volumes:
+      - {{ root_dir }}/calibre/config:/config
+      - {{ mount_dir }}/books:/books
+    ports:
+      - 127.0.0.1:8083:8083
+    restart: unless-stopped
+    networks:
+      - calibre
+networks:
+  calibre:
+    name: calibrenet
+    external: true

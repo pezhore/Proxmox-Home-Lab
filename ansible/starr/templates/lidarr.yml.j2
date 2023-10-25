@@ -1,0 +1,23 @@
+---
+version: '3'
+services:
+  sonarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID={{ puid }}
+      - PGID={{ pgid}}
+      - TZ={{ timezone }}
+    volumes:
+      - {{ root_dir }}/lidarr/config:/config
+      - {{ mount_dir }}/music:/music
+      - {{ mount_dir }}/downloads/complete:/downloads
+    ports:
+      - 127.0.0.1:8686:8686
+    restart: unless-stopped
+    networks:
+      - arrnet
+networks:
+    arrnet:
+      name: arrnet
+      external: true

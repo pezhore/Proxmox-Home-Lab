@@ -1,0 +1,149 @@
+---
+- name: Install and configure Starr
+  hosts: starr
+  become: yes
+  
+  vars:
+    puid: 1024
+    pgid: 101
+    timezone: America/Chicago
+    root_dir: /opt/starr
+    mount_dir: /mnt/ds1618
+    nfs_server: 10.30.1.16
+    nfs_options: "nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0"
+
+  pre_tasks:
+    - name: Install prerequisites
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: latest
+        apt_cache_valid_time: 86400
+      with_items:
+        - nginx
+        - nfs-common
+
+    - name: Create mount directories
+      ansible.builtin.file:
+        path: "{{ mount_dir }}/{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+      loop:
+        - downloads
+        - movies
+        - tv
+        - music
+        - books
+
+    - name: Create entries in fstab
+      ansible.builint.lineinfile:
+        path: /etc/fstab
+        line: "{{ nfs_server }}:{{ item.src }} {{ mount_dir }}/{{ item.dest }} nfs {{ nfs_options }}"
+      with_items:
+        - { src: "/volum,e1/downloads", dest: "downloads" }
+        - { src: "/volume1/Movies", dest: "movies" }
+        - { src: "/volume1/TV", dest: "tv" }
+        - { src: "/volume1/Music", dest: "music" }
+        - { src: "/volume1/Books", dest: "books" }
+        
+    - name: Create arr user and group 
+      block: 
+      - name: Add the arr group
+        ansible.builtin.group:
+          name: arr
+          state: present
+      
+      - name: Add the arr user with uid
+        ansible.builtin.user:
+          name: arr
+          uid: "{{ puid }}"
+          group: arr
+          home: /opt/starr
+          shell: /bin/bash
+          createhome: yes
+          state: present
+    
+    - name: Create all the necessary directories
+      ansible.builtin.file:
+        path: "/opt/starr/{{ item }}"
+        state: directory
+        owner: arr
+        group: arr
+        mode: 0755
+      loop:
+        - calibre
+        - calibre/config
+        - calibre-web
+        - calibre-web/config
+        - lidarr
+        - lidarr/config
+        - overseerr
+        - overseerr/config
+        - prowlarr
+        - prowlarr/config
+        - radarr
+        - radarr/config
+        - readarr
+        - readarr/config
+        - sabnzbd
+        - sabnzbd/config
+        - sonarr
+        - sonarr/config
+        - tautulli
+        - tautulli/config
+        - wud
+        - wud/config
+    
+    - name: Create the various docker-compose files per service
+      ansible.builtin.template:
+        src: "{{ item }}.yml.j2"
+        dest: "/opt/starr/{{ item }}/docker-compose.yml"
+        owner: arr
+        group: arr
+        mode: 0644
+      loop:
+        - calibre
+        - calibre-web
+        - lidarr
+        - overseerr
+        - prowlarr
+        - radarr
+        - readarr
+        - sabnzbd
+        - sonarr
+        - tautulli
+        - wud
+    
+    - name: Copy all the nginx config files
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: root
+        mode: 0644
+      with_items:
+        - { src: "calibre.443.conf", dest: "/etc/nginx/sites-enabled/calibre.443.conf" }
+        - { src: "calibre-web.443.conf", dest: "/etc/nginx/sites-enabled/calibre-web.443.conf" }
+        - { src: "lidarr.443.conf", dest: "/etc/nginx/sites-enabled/lidarr.443.conf" }
+        - { src: "overseerr.443.conf", dest: "/etc/nginx/sites-enabled/overseerr.443.conf" }
+        - { src: "prowlarr.443.conf", dest: "/etc/nginx/sites-enabled/prowlarr.443.conf" }
+        - { src: "radarr.443.conf", dest: "/etc/nginx/sites-enabled/radarr.443.conf" }
+        - { src: "readarr.443.conf", dest: "/etc/nginx/sites-enabled/readarr.443.conf" }
+        - { src: "sabnzbd.443.conf", dest: "/etc/nginx/sites-enabled/sabnzbd.443.conf" }
+        - { src: "sonarr.443.conf", dest: "/etc/nginx/sites-enabled/sonarr.443.conf" }
+        - { src: "tautulli.443.conf", dest: "/etc/nginx/sites-enabled/tautulli.443.conf" }
+        - { src: "wud.443.conf", dest: "/etc/nginx/sites-enabled/wud.443.conf" }
+      notify:
+        - Restart nginx
+  roles:
+    - geerlingguy.docker:
+      vars:
+        docker_install_compose: true
+        docker_users:
+          - arr
+  handlers:
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted

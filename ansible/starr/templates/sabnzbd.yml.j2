@@ -1,0 +1,18 @@
+---
+version: "2.1"
+services:
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID={{ puid }}
+      - PGID={{ pgid }}
+      - TZ={{ timezone }}
+      - HAS_IPV6=false
+    volumes:
+      - {{ root_dir }}/sabnzbd/config:/config # sab config directory
+      - {{ mount_dir }}/downloads/complete:/downloads # completed directory for downloads. this contains the category directories
+      - {{ mount_dir }}/downloads/incomplete:/incomplete-downloads # temp directory for downloads
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8080:8080
