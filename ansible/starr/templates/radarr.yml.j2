@@ -1,0 +1,23 @@
+---
+version: '3'
+services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID={{ puid }}
+      - PGID={{ pgid }}
+      - TZ={{ timezone }}
+    volumes:
+      - {{ root_dir }}/radarr/config:/config
+      - {{ mount_dir }}/movies:/movies
+      - {{ mount_dir }}/downloads/complete:/downloads
+    ports:
+      - 127.0.0.1:7878:7878
+    restart: unless-stopped
+    networks:
+      - arrnet
+networks:
+  arrnet:
+    name: arrnet
+    external: true

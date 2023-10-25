@@ -1,0 +1,50 @@
+---
+ersion: '3'
+
+services:
+  whatsupdocker:
+    image: fmartinou/whats-up-docker
+    container_name: wud
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - {{ root_dir }}/wud/config:/store
+      - {{ root_dir }}/lidarr/docker-compose.yml:/wud/lidarr/docker-compose.yml
+      - {{ root_dir }}/calibre/docker-compose.yml:/wud/calibre/docker-compose.yml
+      - {{ root_dir }}/readarr/docker-compose.yml:/wud/readarr/docker-compose.yml
+      - {{ root_dir }}/sonarr/docker-compose.yml:/wud/sonarr/docker-compose.yml
+      - {{ root_dir }}/whisparr/docker-compose.yml:/wud/whisparr/docker-compose.yml
+      - {{ root_dir }}/calibre-web/docker-compose.yml:/wud/calibre-web/docker-compose.yml
+      - {{ root_dir }}/prowlarr/docker-compose.yml:/wud/prowlarr/docker-compose.yml
+      - {{ root_dir }}/overseerr/docker-compose.yml:/wud/overseerr/docker-compose.yml
+      - {{ root_dir }}/wud/docker-compose.yml:/wud/wud/docker-compose.yml
+      - {{ root_dir }}/radarr/docker-compose.yml:/wud/radarr/docker-compose.yml
+      - {{ root_dir }}/sabnzbd/docker-compose.yml:/wud/sabnzbd/docker-compose.yml
+      - {{ root_dir }}/namarr/docker-compose.yml:/wud/namarr/docker-compose.yml
+    environment:
+      - WUD_TRIGGER_DOCKERCOMPOSE_LIDARR_FILE=/wud/lidarr/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_LIDARR_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_CALIBRE_FILE=/wud/calibre/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_CALIBRE_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_READARR_FILE=/wud/readarr/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_READARR_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_SONARR_FILE=/wud/sonarr/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_SONARR_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_WHISPARR_FILE=/wud/whisparr/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_WHISPARR_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_CALIBREWEB_FILE=/wud/calibre-web/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_CALIBREWEB_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_PROWLARR_FILE=/wud/prowlarr/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_PROWLARR_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_OVERSEERR_FILE=/wud/overseerr/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_OVERSEERR_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_WUD_FILE=/wud/wud/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_WUD_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_RADARR_FILE=/wud/radarr/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_RADARR_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_SABNZBD_FILE=/wud/sabnzbd/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_SABNZBD_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_NAMARR_FILE=/wud/namarr/docker-compose.yml
+      - WUD_TRIGGER_DOCKERCOMPOSE_NAMARR_BACKUP=true
+      - WUD_REGISTRY_LSCR_TOKEN={{ github_token }}
+    ports:
+      - 127.0.0.1:3000:3000

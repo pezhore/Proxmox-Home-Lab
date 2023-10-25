@@ -1,0 +1,23 @@
+---
+version: '3'
+services:
+  radarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    environment:
+      - PUID={{ puid }}
+      - PGID={{ pgid }}
+      - TZ={{ timezone }}
+    volumes:
+      - {{ root_dir }}/readarr/config:/config
+      - {{ mount_dir }}/books:/books
+      - {{ mount_dir }}/downloads/complete:/downloads
+    ports:
+      - 127.0.0.1:8787:8787
+    restart: unless-stopped
+    networks:
+      - calibre
+networks:
+  calibre:
+    name: calibrenet
+    external: true
