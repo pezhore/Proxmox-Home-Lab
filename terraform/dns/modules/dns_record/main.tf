@@ -8,6 +8,7 @@ resource "powerdns_record" "a" {
 }
 
 resource "powerdns_record" "ptr" {
+    count = var.reverse_record ? 1 : 0
     zone = var.ptr_zone
 
     name = join(".", [join(".", reverse(split(".",var.record))), "in-addr.arpa."])
