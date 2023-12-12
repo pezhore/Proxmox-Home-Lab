@@ -1,0 +1,37 @@
+---
+- hosts: proxmox
+  become: true
+
+  vars:
+    vlans:
+        - { vlan_id: 100, description: "Isolated VLAN"}
+        - { vlan_id: 101, description: "Testing VLAN" }
+        - { vlan_id: 10, description: "Primary Network VLAN"}
+        - { vlan_id: 20, description: "Proxmox 1GB Storage"}
+  tasks:
+
+    - name: Add our various vlan blocks
+      ansible.builtin.blockinfile:
+        path: /etc/network/interfaces
+        block: |
+          {% for item in vlans -%}
+          # VLAN {{ item.vlan_id }} - {{ item.description }}
+          iface bond0.{{ item.vlan_id }} inet manual
+
+          auto vmbr{{ item.vlan_id }}
+          iface vmbr{{ item.vlan_id }} inet static
+                  bridge-ports bond0.{{ item.vlan_id }}
+                  bridge-stp off
+                  bridge-fd 0
+          # {{ item.description }}
+
+          {% endfor %}
+
+        marker: "# {mark} ANSIBLE MANAGED BLOCK VLAN CONFIGURATION"
+
+
+      notify: ifreload
+  
+  handlers:
+    - name: ifreload
+      ansible.builtin.shell: ifreload -a
