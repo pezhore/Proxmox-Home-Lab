@@ -23,19 +23,19 @@
       community.general.proxmox_kvm:
         api_user: root@pam
         api_password:  "{{ lookup('hashi_vault', 'secret=homelab/data/shared').root_password}}"
-        api_host: "{{ config.lab.api_host}}"    
+        api_host: "{{ config.lab.api_host }}"
         state: current
         vmid: "{{ item.value.vmid }}"
         node: pve-01
       register: cluster_vms
-      loop: "{{ config.core_vms |dict2items}}"
+      loop: "{{ config.core_vms |dict2items }}"
       ignore_errors: true
 
 ### This whole thing was an effort to mitigate errors when migrating/balancing vms. it doesn't work really - vms appear to be on a different host than what they actual are
     - name: debug message where the results json vmid is 100
       debug:
         msg: "{{ cluster_vms.results}}" # | json_query('[?vmid==`100`].item.value.node') }}"
-    
+
     - name: dump output to file
       copy:
         content: "{{ cluster_vms.results }}"
@@ -46,22 +46,25 @@
         msg: "vm: {{item.key}} --- confnode: {{item.value.node}} --- actual_node:{{ cluster_vms.results | json_query(query) }}"
       vars:
         query: "[?vmid==`{{ item.value.vmid }}`].item.value.node"
-      loop: "{{ config.core_vms |dict2items}}"
+      loop: "{{ config.core_vms |dict2items }}"
 
     # - name: debug message to check node position
     #   debug:
     #     msg: "{% if item.value.node == cluster_vms.results|json_query(query)|first %}Should Match{% else %}name: {{item.key}} is configured to be on '{{ item.value.node }}', but the query shows it's actual node is '{{ cluster_vms.results | json_query(query)| first }}'. Look here for the config: {{cluster_vms.results|json_query(query)|first}}{% endif %}"
     #   vars:
     #     query: "[?vmid==`{{ item.value.vmid }}`].item.value.node"
-    #   loop: "{{ config.core_vms |dict2items}}"
+    #   loop: "{{ config.core_vms |dict2items }}"
 
     - name: Block to Deploy our systems
       block:
+        # - name: Create the envfile
+        #   ansible.builtin.file:
+        #   loop: "{{ config.core_vms |dict2items }}"
         - name: Clone the template
           community.general.proxmox_kvm:
             api_user: root@pam
             api_password:  "{{ lookup('hashi_vault', 'secret=homelab/data/shared').root_password}}"
-            api_host: "{{ config.lab.api_host}}"      
+            api_host: "{{ config.lab.api_host }}"
             clone: "{{ item.value.node }}-{{ item.value.template }}"
             name: "{{ item.key }}"
             node: "{{ item.value.node }}"
@@ -69,13 +72,13 @@
             full: true
             newid: "{{ item.value.vmid }}"
             timeout: 500
-          loop: "{{ config.core_vms |dict2items}}"
-     
+          loop: "{{ config.core_vms |dict2items }}"
+
         - name: Update the VM
           community.general.proxmox_kvm:
             api_user: root@pam
             api_password:  "{{ lookup('hashi_vault', 'secret=homelab/data/shared').root_password}}"
-            api_host: "{{ config.lab.api_host}}"
+            api_host: "{{ config.lab.api_host }}"
             node: "{{ item.value.node}}"
             name: "{{ item.key }}"
             cicustom: "user=ds1618:snippets/{{ item.key }}-user-config.yaml,vendor=ds1618:snippets/agent_install-vendor-config.yaml"
@@ -94,14 +97,14 @@
             update: true
           vars:
             query: "[?vmid==`{{ item.value.vmid }}`].item.value.node"
-          loop: "{{ config.core_vms |dict2items}}"
+          loop: "{{ config.core_vms |dict2items }}"
           ignore_errors: true
 
         - name: Start VMs
           community.general.proxmox_kvm:
             api_user: root@pam
             api_password:  "{{ lookup('hashi_vault', 'secret=homelab/data/shared').root_password}}"
-            api_host: "{{ config.lab.api_host}}"
+            api_host: "{{ config.lab.api_host }}"
             name: "{{ item.key }}"
             state: started
-          loop: "{{ config.core_vms |dict2items}}"
+          loop: "{{ config.core_vms |dict2items }}"

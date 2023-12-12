@@ -17,6 +17,13 @@ locals {
       "ds1618"
     )
   )
+  cephfs_ds = element(data.proxmox_virtual_environment_datastores.lab.datastore_ids,
+    index(
+      data.proxmox_virtual_environment_datastores.lab.datastore_ids,
+      "cephfs"
+    )
+  )
+  
   container_ds = element(data.proxmox_virtual_environment_datastores.lab.datastore_ids,
     index(
       data.proxmox_virtual_environment_datastores.lab.datastore_ids,

@@ -1,0 +1,7 @@
+ciuser: ubuntu
+dns: ["10.0.0.241", "10.0.0.242"]
+
+templates:
+  jammy_cloud:
+    name: ubuntu-22.04-server-cloudimg-amd64
+    disk0_size: "20G"

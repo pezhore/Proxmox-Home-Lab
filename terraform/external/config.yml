@@ -77,37 +77,83 @@ ansible_groups:
     - k3s
 extra_dns:
   keycloak:
-    ipv4: 10.0.0.243
+    ipv4: 10.0.0.32
+    reverse_record: false
   erl3:
     ipv4: 10.0.0.1
+    reverse_record: true
   esw24:
     ipv4: 10.0.0.2
+    reverse_record: true
   ds1618:
     ipv4: 10.0.0.16
+    reverse_record: true
   pihole:
     ipv4: 10.0.0.19
+    reverse_record: true
   uckg2:
     ipv4: 10.0.0.130
+    reverse_record: true
   vault:
     ipv4: 10.0.0.181
+    reverse_record: true
   vault-1:
     ipv4: 10.0.0.181
+    reverse_record: false
   vault-2:
     ipv4: 10.0.0.181
+    reverse_record: false
   vault-3:
     ipv4: 10.0.0.181
+    reverse_record: false
   vault-4:
     ipv4: 10.0.0.181
+    reverse_record: false
   orbi-s:
     ipv4: 10.0.0.5
+    reverse_record: true
   tls-sg105e:
     ipv4: 10.0.0.6
+    reverse_record: true
   pve-01:
-    ipv4: 10.0.0.241
+    ipv4: 10.0.0.211
+    reverse_record: true
   pve-02:
-    ipv4: 10.0.0.242
+    ipv4: 10.0.0.212
+    reverse_record: true
   pve-03:
-    ipv4: 10.0.0.243
+    ipv4: 10.0.0.213
+    reverse_record: true
+  starr:
+    ipv4: 10.0.0.41
+    reverse_record: true
+  sonarr:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  radarr:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  sabnzbd:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  lidarr:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  namarr:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  calibre:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  calibre-web:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  comicrack:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  plexovo:
+    ipv4: 10.0.0.42
+    reverse_record: true
 core_vms:
   pdns-1:
     template: jammy-template
@@ -215,10 +261,10 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.243
+    ipv4: 10.0.0.32
     gateway: 10.0.0.1
-  k8s-master:
-    template: jammy-template
+  kubes-master:
+    template: ubuntu-22.04-tmpl
     node: pve-02
     description: Kubernetes Master for Lab
     os_type: ubuntu
@@ -245,8 +291,8 @@ core_vms:
           bridge: vmbr0
     ipv4: 10.0.0.65
     gateway: 10.0.0.1
-  k8s-worker-01:
-    template: jammy-template
+  kubes-worker-01:
+    template: ubuntu-22.04-tmpl
     node: pve-03
     description: Kubernetes Worker for Lab
     os_type: ubuntu
@@ -273,8 +319,8 @@ core_vms:
           bridge: vmbr0
     ipv4: 10.0.0.66
     gateway: 10.0.0.1
-  k8s-worker-02:
-    template: jammy-template
+  kubes-worker-02:
+    template: ubuntu-22.04-tmpl
     node: pve-01
     description: Kubernetes Worker for Lab
     os_type: ubuntu
@@ -300,62 +346,6 @@ core_vms:
           model: virtio
           bridge: vmbr0
     ipv4: 10.0.0.67
-    gateway: 10.0.0.1
-  k8s-worker-03:
-    template: jammy-template
-    node: pve-02
-    description: Kubernetes Worker for Lab
-    os_type: ubuntu
-    cores: 2
-    sockets: 2
-    vcpus: 2
-    memory: 4096
-    vmid: 107
-    tags:
-      - ansible
-      - ubuntu
-      - kubernetes
-    scsihw: virtio-scsi-pci
-    disks:
-      scsi0:
-        size: 168G
-        storage: ds1618
-        type: scsi
-        format: qcow2
-    dynamic:
-      networks:
-        net0:
-          model: virtio
-          bridge: vmbr0
-    ipv4: 10.0.0.68
-    gateway: 10.0.0.1
-  k8s-worker-04:
-    template: jammy-template
-    node: pve-02
-    description: Kubernetes Worker for Lab
-    os_type: ubuntu
-    cores: 2
-    sockets: 2
-    vcpus: 2
-    memory: 4096
-    vmid: 108
-    tags:
-      - ansible
-      - ubuntu
-      - kubernetes
-    scsihw: virtio-scsi-pci
-    disks:
-      scsi0:
-        size: 168G
-        storage: ds1618
-        type: scsi
-        format: qcow2
-    dynamic:
-      networks:
-        net0:
-          model: virtio
-          bridge: vmbr0
-    ipv4: 10.0.0.69
     gateway: 10.0.0.1
   minecraft:
     template: jammy-template
@@ -385,20 +375,20 @@ core_vms:
           bridge: vmbr0
     ipv4: 10.0.0.30
     gateway: 10.0.0.1
-  plex:
+  wireguard:
     template: jammy-template
     node: pve-03
-    description: Plex Server
+    description: wireguard Server
     os_type: ubuntu
     cores: 2
     sockets: 4
     vcpus: 2
     memory: 8192
-    vmid: 212
+    vmid: 108
     tags:
       - ansible
       - ubuntu
-      - plex
+      - wireguard
     scsihw: virtio-scsi-pci
     disks:
       scsi0:
@@ -411,35 +401,7 @@ core_vms:
         net0:
           model: virtio
           bridge: vmbr0
-    ipv4: 10.0.0.31
-    gateway: 10.0.0.1
-  k3s:
-    template: jammy-template
-    node: pve-03
-    description: k3s host
-    os_type: ubuntu
-    cores: 2
-    sockets: 4
-    vcpus: 2
-    memory: 8192
-    vmid: 2412
-    tags:
-      - ansible
-      - ubuntu
-      - plex
-    scsihw: virtio-scsi-pci
-    disks:
-      scsi0:
-        size: 50G
-        storage: ceph-vm
-        type: scsi
-        format: qcow2
-    dynamic:
-      networks:
-        net0:
-          model: virtio
-          bridge: vmbr0
-    ipv4: 10.0.0.22
+    ipv4: 10.0.0.70
     gateway: 10.0.0.1
 containers:
   wireguard:

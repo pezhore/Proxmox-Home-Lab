@@ -18,3 +18,9 @@ variable "ttl" {
 variable "record" {
     description = "IP Address"
 }
+
+variable "reverse_record" {
+    type = bool
+    description = "Optionally create a reverse record for this IP address, defaults to true"
+    default = true
+}

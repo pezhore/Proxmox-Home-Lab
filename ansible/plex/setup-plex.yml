@@ -1,7 +1,6 @@
 ---
-- hosts: plex.lan.pezlab.dev
+- hosts: plex
   become: true
-  vars_files: ./plex-ansible-vars.yml
 
   vars:
     install_nginx: true
@@ -9,12 +8,12 @@
   pre_tasks:
     - name: Copy Cert
       ansible.builtin.copy:
-        content: "{{ wildcard_tls_cert }}"
+        content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert }}"
         dest: /etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem
     
     - name: Copy Key
       ansible.builtin.copy:
-        content: "{{ wildcard_tls_key }}"
+        content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey }}"
         dest: /etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem
     
     - name: Install pre-requisite apt packages

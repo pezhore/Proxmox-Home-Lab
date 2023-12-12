@@ -1,0 +1,16 @@
+internal:
+  bridge: vmbr10
+  gateway: 10.0.0.1
+  cidr: 24
+isolated:
+  bridge: vmbr100
+  gateway: 10.100.0.1
+  cidr: 24
+testing:
+  bridge: vmbr101
+  gateway: 10.101.0.1
+  cidr: 24
+fibre:
+  bridge: vmbr2
+  gateway: 10.30.1.1
+  cidr: 24

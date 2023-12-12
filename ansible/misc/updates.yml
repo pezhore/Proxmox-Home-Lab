@@ -1,0 +1,23 @@
+- hosts: minecraft, pdns, plex, starr, netbox, vault
+  become: true
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+ 
+    - name: Upgrade all packages
+      apt:
+        upgrade: true
+        autoremove: yes
+        autoclean: yes
+
+    - name: Check if reboot required
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required_file
+
+    - name: Reboot if required
+      reboot:
+      when: reboot_required_file.stat.exists == true
