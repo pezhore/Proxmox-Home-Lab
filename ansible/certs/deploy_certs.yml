@@ -1,6 +1,6 @@
 ---
 - name: Deploy certificates
-  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault, ubiquiti
+  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault_lb, ubiquiti, starr.lan.pezlab.dev
   become: true
 
   vars:
@@ -10,6 +10,19 @@
     wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey }}"
 
   tasks:
+    - name: Install certs to starr
+      block:
+        - name: set content of Netbox certificate and key
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+          with_items:
+            - { dest: "/etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem", content: "{{ wildcard_cert }}" }
+            - { dest: "/etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem", content: "{{ wildcard_privkey }}" }
+          notify: restart nginx
+          no_log: true
+      when: "'starr.lan.pezlab.dev' in inventory_hostname"
+
     - name: Install certs to netbox
       block:
         - name: set content of Netbox certificate and key
@@ -147,7 +160,7 @@
             - { dest: "/etc/ssl/private/vault.pezlab.local.key", content: "{{ wildcard_privkey }}" }
           no_log: true
           notify: restart nginx
-      when: inventory_hostname in groups['vault']
+      when: inventory_hostname in groups['vault_lb']
 
     - name: Install certs on ubiquiti systems
       block:
