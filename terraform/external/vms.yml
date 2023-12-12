@@ -1,0 +1,117 @@
+k8s-control-1:
+  cores: 4
+  memory: 4096
+  pve_node: pve-01
+  desc: Kubernetes control plane node 1
+  template: jammy_cloud
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.65/24
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 20G
+        storage: ds1618
+        type: virtio
+        format: raw
+      scsi1:
+        size: 30G
+        storage: ds1618
+        type: virtio
+        format: raw
+k8s-worker-1:
+  cores: 2
+  memory: 4096
+  pve_node: pve-01
+  desc: Kubernetes worker node 1
+  template: jammy_cloud
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.66/24
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 20G
+        storage: ds1618
+        type: virtio
+        format: raw
+      scsi1:
+        size: 30G
+        storage: ds1618
+        type: virtio
+        format: raw
+k8s-worker-2:
+  cores: 2
+  memory: 4096
+  pve_node: pve-03
+  desc: Kubernetes worker node 1
+  template: jammy_cloud
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.67/24
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 20G
+        storage: ds1618
+        type: virtio
+        format: raw
+keycloak:
+  cores: 2
+  memory: 2048
+  pve_node: pve-03
+  desc: Keycloak IDP
+  tags:
+    - ansible
+    - ubuntu
+  template: jammy_cloud
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.32
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 20G
+        storage: ceph-vm
+        type: scsi
+        format: qcow2
+vpn:
+  cores: 2
+  memory: 4096
+  pve_node: pve-03
+  template: jammy_cloud
+  desc: wireguard Server
+  tags:
+    - ansible
+    - ubuntu
+    - wireguard
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.80
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 20G
+        storage: ceph-vm
+        type: scsi
+        format: qcow2
