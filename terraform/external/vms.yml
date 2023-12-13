@@ -4,6 +4,10 @@ k8s-control-1:
   pve_node: pve-01
   desc: Kubernetes control plane node 1
   template: jammy_cloud
+  scsihw: lsi
+  tags:
+    - kubernetes
+    - k8s-control
   dynamic:
     networks:
       primary:
@@ -29,6 +33,10 @@ k8s-worker-1:
   pve_node: pve-01
   desc: Kubernetes worker node 1
   template: jammy_cloud
+  scsihw: lsi
+  tags:
+    - kubernetes
+    - k8s-workers
   dynamic:
     networks:
       primary:
@@ -54,6 +62,10 @@ k8s-worker-2:
   pve_node: pve-03
   desc: Kubernetes worker node 1
   template: jammy_cloud
+  scsihw: lsi
+  tags:
+    - kubernetes
+    - k8s-workers
   dynamic:
     networks:
       primary:
@@ -74,9 +86,10 @@ keycloak:
   pve_node: pve-03
   desc: Keycloak IDP
   tags:
-    - ansible
+    - keycloak
     - ubuntu
   template: jammy_cloud
+  scsihw: lsi
   dynamic:
     networks:
       primary:
@@ -90,17 +103,18 @@ keycloak:
         size: 20G
         storage: ceph-vm
         type: scsi
-        format: qcow2
+        format: raw
 vpn:
   cores: 2
   memory: 4096
   pve_node: pve-03
-  template: jammy_cloud
   desc: wireguard Server
+  template: jammy_cloud
+  scsihw: lsi
   tags:
-    - ansible
     - ubuntu
     - wireguard
+  autostart: true
   dynamic:
     networks:
       primary:
@@ -114,4 +128,64 @@ vpn:
         size: 20G
         storage: ceph-vm
         type: scsi
+        format: raw
+minecraft:
+  cores: 2
+  sockets: 2
+  vcpus: 2
+  cpu: cputype=qemu64
+  memory: 4096
+  pve_node: pve-03
+  desc: Minecraft server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - minecraft
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.30
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 30G
+        storage: ds1618
+        type: scsi
         format: qcow2
+        discard: "on"
+pdns-2:
+  cores: 2
+  sockets: 1
+  vcpus: 1
+  cpu: cputype=qemu64
+  memory: 2048
+  pve_node: pve-03
+  desc: PowerDNS Server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - minecraft
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.242
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 8G
+        storage: ds1618
+        type: scsi
+        format: qcow2
+        discard: "on"

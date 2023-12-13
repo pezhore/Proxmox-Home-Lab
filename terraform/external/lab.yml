@@ -1,6 +1,10 @@
 ciuser: ubuntu
 dns: ["10.0.0.241", "10.0.0.242"]
-
+storage:
+  ds1618:
+    ssd: 0
+  ceph-vm:
+    ssd: 1
 templates:
   jammy_cloud:
     name: ubuntu-22.04-server-cloudimg-amd64
