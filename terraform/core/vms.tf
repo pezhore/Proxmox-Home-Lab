@@ -27,11 +27,15 @@ resource "proxmox_vm_qemu" "core" {
   # Define a static IP on the primary network interface
   ipconfig0 = "ip=${each.value.dynamic.networks.primary.ip}/24,gw=${local.networks[each.value.dynamic.networks.primary.net].gateway}"
 
-  network {
-    bridge    = local.networks[each.value.dynamic.networks.primary.net].bridge
-    firewall  = each.value.dynamic.networks.primary.firewall
-    link_down = each.value.dynamic.networks.primary.link_down
-    model     = each.value.dynamic.networks.primary.model
+  dynamic "network" {
+    for_each = each.value.dynamic.networks
+
+    content {
+      bridge    = local.networks[network.value.net].bridge
+      firewall  = network.value.firewall
+      link_down = network.value.link_down
+      model     = network.value.model
+    }
   }
 
   ciuser                 = local.lab.ciuser
@@ -39,7 +43,9 @@ resource "proxmox_vm_qemu" "core" {
   define_connection_info = true
   onboot                 = try(each.value.autostart, false)
 
-  tags = "terraform;${join(";", [for item in each.value.tags : item])}"
+  # Always include the terraform tag, but extra tags can be provided. We must
+  # sort to ensure subsequnt runs don't make changes
+  tags = join(";", sort(concat(["terraform"], [for item in each.value.tags : item])))
 
   # Enable the QEMU guest agent
   agent = 1
