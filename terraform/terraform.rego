@@ -26,7 +26,8 @@ weights := {
     "proxmox_virtual_environment_role": { "delete": 30, "create": 10, "modify": 5},
     "proxmox_virtual_environment_time": { "delete": 10, "create": 5, "modify": 1},
     "proxmox_virtual_environment_user": { "delete": 30, "create": 10, "modify": 5},
-    "proxmox_virtual_environment_vm": { "delete": 30, "create": 10, "modify": 5}
+    "proxmox_virtual_environment_vm": { "delete": 30, "create": 10, "modify": 5},
+    "proxmox_vm_qemu": { "delete": 30, "create": 10, "modify": 5}
 }
 
 # Consider exactly these resource types in calculations
@@ -46,7 +47,8 @@ resource_types := {
     "proxmox_virtual_environment_role",
     "proxmox_virtual_environment_time",
     "proxmox_virtual_environment_user",
-    "proxmox_virtual_environment_vm"
+    "proxmox_virtual_environment_vm",
+    "proxmox_vm_qemu"
 }
 
 #########
