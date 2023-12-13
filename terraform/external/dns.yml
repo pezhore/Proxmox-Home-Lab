@@ -76,3 +76,9 @@ comicrack:
 plexovo:
   ipv4: 10.0.0.42
   reverse_record: true
+octopi:
+  ipv4: 10.0.0.220
+  reverse_record: true
+overseerr:
+  ipv4: 10.0.0.41
+  reverse_record: false

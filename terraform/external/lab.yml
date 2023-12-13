@@ -1,4 +1,5 @@
 ciuser: ubuntu
+fqdn: lan.pezlab.dev
 dns: ["10.0.0.241", "10.0.0.242"]
 storage:
   ds1618:
