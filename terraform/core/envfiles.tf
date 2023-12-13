@@ -3,9 +3,10 @@
 #===============================================================================
 
 resource "proxmox_virtual_environment_file" "user_config" {
-  for_each     = local.config.core_vms
+  provider     = bpg
+  for_each     = local.vms
   content_type = "snippets"
-  datastore_id = local.cephfs_ds
+  datastore_id = try(each.value.cloudinit_storage, "ds1618")
   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
 
   source_raw {
@@ -32,8 +33,9 @@ users:
 }
 
 resource "proxmox_virtual_environment_file" "vendor_config" {
+  provider     = bpg
   content_type = "snippets"
-  datastore_id = local.cephfs_ds
+  datastore_id = local.ds1618_ds
   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
 
   source_raw {
@@ -52,28 +54,30 @@ runcmd:
 }
 
 
-#===============================================================================
-# Ubuntu Cloud Images
-#===============================================================================
+# #===============================================================================
+# # Ubuntu Cloud Images
+# #===============================================================================
 
-resource "proxmox_virtual_environment_file" "ubuntu" {
-  for_each     = local.config.cloud_images
-  content_type = "iso"
-  datastore_id = local.cephfs_ds
-  node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
+# resource "proxmox_virtual_environment_file" "ubuntu" {
+#   provider = bpg
+#   for_each     = local.config.cloud_images
+#   content_type = "iso"
+#   datastore_id = local.cephfs_ds
+#   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
 
-  source_file {
-    path = "https://cloud-images.ubuntu.com/${each.key}/current/${each.key}-server-cloudimg-amd64.img"
-  }
-}
+#   source_file {
+#     path = "https://cloud-images.ubuntu.com/${each.key}/current/${each.key}-server-cloudimg-amd64.img"
+#   }
+# }
 
-resource "proxmox_virtual_environment_file" "ubuntu_container_template" {
-  for_each = local.config.container_images
-  content_type = "vztmpl"
-  datastore_id = local.cephfs_ds
-  node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
+# resource "proxmox_virtual_environment_file" "ubuntu_container_template" {
+#   provider = bpg
+#   for_each = local.config.container_images
+#   content_type = "vztmpl"
+#   datastore_id = local.cephfs_ds
+#   node_name    = data.proxmox_virtual_environment_datastores.lab.node_name
 
-  source_file {
-    path = each.value
-  }
-}
+#   source_file {
+#     path = each.value
+#   }
+# }

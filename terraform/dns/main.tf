@@ -59,15 +59,15 @@ module "core_records" {
 
   source = "./modules/dns_record"
   for_each = {
-    for vm, conf in local.config.core_vms : vm => conf
+    for vm, conf in local.vms : vm => conf
     if !contains(["pdns-1", "pdns-2"], vm)
   }
 
   fwd_zone = powerdns_zone.lan_pezlab_dev.name
   ptr_zone = powerdns_zone.reverse_lan_pezlab_dev.name
-  fqdn     = "${each.key}.${local.config.lab.fqdn}."
+  fqdn     = "${each.key}.${local.lab.fqdn}."
   ttl      = 500
-  record   = each.value.ipv4
+  record   = each.value.dynamic.networks["primary"].ip
 }
 
 module "extra_records" {
@@ -78,14 +78,14 @@ module "extra_records" {
 
   source = "./modules/dns_record"
   for_each = {
-    for vm, conf in local.config.extra_dns : vm => conf
+    for vm, conf in local.extradns : vm => conf
     if !contains(["pdns-1", "pdns-2"], vm)
   }
 
   fwd_zone       = powerdns_zone.lan_pezlab_dev.name
   ptr_zone       = powerdns_zone.reverse_lan_pezlab_dev.name
   reverse_record = each.value.reverse_record
-  fqdn           = "${each.key}.${local.config.lab.fqdn}."
+  fqdn           = "${each.key}.${local.lab.fqdn}."
   ttl            = 500
   record         = each.value.ipv4
 }

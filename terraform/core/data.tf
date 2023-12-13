@@ -21,9 +21,12 @@ data "http" "github_ssh_keys" {
 
 ##############
 # Proxmox things
-data "proxmox_virtual_environment_nodes" "lab" {}
+data "proxmox_virtual_environment_nodes" "lab" {
+  provider = bpg
+}
 
 data "proxmox_virtual_environment_datastores" "lab" {
+  provider = bpg
   # for_each = data.proxmox_virtual_environment_nodes.lab.names
   # node_name = each.key
 
