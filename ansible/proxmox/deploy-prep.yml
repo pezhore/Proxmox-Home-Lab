@@ -1,0 +1,6 @@
+---
+- hosts: pve-01
+  become: true
+
+  roles:
+    - role: './deploy-prep'  #This handles the cloud_init iso pull, modification, etc

@@ -1,0 +1,37 @@
+- name: Check if template already exists
+  shell: qm list | grep "{{ vm_id }}"
+  ignore_errors: true
+  register: template_exists_cmd
+
+- name: Delete template {{ vm_id }} if it already exists
+  command: qm destroy {{ vm_id }}
+  when: template_exists_cmd.rc == 0
+
+- name: Create the VM to be used as a cloud-init base for template {{ vm_instance_template_name }}
+  command: qm create {{ vm_id }} -name {{ vm_instance_template_name }} -memory 1024 -net0 virtio,bridge=vmbr10 -cores 1 -sockets 1
+
+- name: Import the cloud init ISO image into the disk
+  command: qm importdisk {{ vm_id }} {{ iso_image_path }} {{ storage }}
+
+- name: Debug things
+  debug:
+    msg: qm set {{ vm_id }} -scsihw virtio-scsi-pci -virtio0 "{{ storage }}:vm-{{ vm_id }}-disk-0"
+
+- name: Attach the disk to the virtual machine
+  command: qm set {{ vm_id }} -scsihw virtio-scsi-pci -virtio0 "/mnt/pve/{{ storage }}/images/{{ vm_id }}/vm-{{ vm_id }}-disk-0.raw"
+
+- name: Set a second drive of the cloud-init type
+  command: qm set {{ vm_id }} -ide2 "{{ storage }}:cloudinit"
+
+- name: Add serial output
+  command: qm set {{ vm_id }} -serial0 socket -vga serial0
+
+- name: Set the bootdisk to their imported disk
+  command: qm set {{ vm_id }} -boot c -bootdisk virtio0
+
+- name: Enable qemu guest agent
+  command: qm set {{ vm_id }} --agent enabled=1
+  when: enable_qemu_guest_agent is defined
+
+- name: Create a template from the instance
+  command: qm template {{ vm_id }}
