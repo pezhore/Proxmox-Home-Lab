@@ -1,0 +1,5 @@
+- name: Download ISO images to directory "{{ pvesm_local_storage_path }}/{{ pvesm_local_storage_iso_subpath }}"
+  loop: "{{ iso_images_to_download }}"
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ pvesm_local_storage_path }}/{{ pvesm_local_storage_iso_subpath }}/{{ item.filename }}"
