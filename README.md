@@ -69,3 +69,5 @@ AWS_ACCESS_KEY_ID=$(vault kv get -mount=homelab -field=terraform_access_key wasa
 * Terraform provider for Proxmox by [Telmate](https://registry.terraform.io/providers/Telmate/proxmox)
 * Ceph Ansible code taken and consolidated from [peacedata0](https://github.com/peacedata0/proxmox-ansible-1)
 * Synology Certs Role by [JohnVillalovos](https://github.com/JohnVillalovos/synology_certs)
+- Additional deployment strategy [TotalDebug](https://totaldebug.uk/posts/automating-proxmox-with-terraform-ansible/)
+- k3s things from [Fredrickb](https://fredrickb.com/2023/08/05/setting-up-k3s-nodes-in-proxmox-using-terraform/)
