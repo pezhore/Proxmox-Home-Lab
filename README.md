@@ -17,45 +17,31 @@ Three node Proxmox cluster installed with shared storage.
 
 ### Automation and Responsibilities
 
-Terraform will handle:
-
-- Template creation
-- Envfiles (for cloudinit,etc)
-- Base cluster config
-- Ansible lab inventory file generation
-- DNS zones, records, etc
-
 Ansible will handle:
+- Cloud Image creation
+- Ceph Installation
+- Proxmox VLAN setup
+- Post deployment software installation/configuration
 
-- Actual Vm deployment
-- Software configuration and installation
+Terraform will handle:
+- VM deployment
+- DNS management
+- Netbox
 
 ## Order of Operations
 
 1. Install Proxmox on each node, using xfs for storage, leaving the 2TB NVMe drive untouched for future Ceph configuration
 2. Join the hosts to a cluster
 3. Run the bootstrap ansible playbook to install prerequisites, and do base configuration
-4. `scp` the network configuration and apply (setting up the proper bond/bridge interfaces)
+4. Run the `vlan_setup.yml` playbook to configure networks
 5. Configure Ceph
 6. Configure NFS share for Synology DS1618
-7. Run Terraform to do things, then Ansible, and maybe Terraform again.
+7. Run the `deploy-prep.yml` to handle the creation of the cloud init template
+8. Run terraform to deploy vms
+9. Run ansible to configure PowerDNS/Netox
+10. Run terraform to handle dns/netbox things
 
 ## Known Issues
-
-### Packer
-
-Packer templates need to have a `cloud-init` drive added with the following commands (replace `9000` with the VM ID)
-
-```bash
-qm set 9000 --ide2 local-lvm:cloudinit
-qm set 9000 --boot order=scsi0
-qm set 9000 --serial0 socket --vga serial0
-```
-
-### Terraform
-
-Proxmox really doesn't like to have multiple VMs created from the same template simulateously. to fix this, add
-`-parallelism=1` to the `terraform apply` command.
 
 ### PowerDNS
 
@@ -74,7 +60,7 @@ Still working on how to get PowerDNS to defer to PiHole for adblocking...
 To run Terraform and pull AWS creds from Vault, update the following with your mount/field.
 
 ```
-AWS_ACCESS_KEY_ID=$(vault kv get -mount=homelab -field=terraform_access_key wasabi ) AWS_SECRET_ACCESS_KEY=$(vault kv get -mount=homelab -field=terraform_secret_key wasabi) terraform plan
+AWS_ACCESS_KEY_ID=$(vault kv get -mount=homelab -field=terraform_access_key wasabi) AWS_SECRET_ACCESS_KEY=$(vault kv get -mount=homelab -field=terraform_secret_key wasabi) terraform plan
 ```
 
 ## Acknowledgements
