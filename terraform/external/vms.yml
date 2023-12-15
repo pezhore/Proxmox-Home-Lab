@@ -4,7 +4,7 @@ k8s-control-1:
   pve_node: pve-03
   desc: K8s Controller
   template: jammy_cloud
-  scsihw: lsi
+  scsihw: virtio-scsi-pci
   tags:
     - ubuntu
     - k8s
@@ -17,19 +17,13 @@ k8s-control-1:
         firewall: false
         link_down: false
         model: virtio
-    disks:
-      scsi0:
-        size: 20G
-        storage: ceph-vm
-        type: scsi
-        format: raw
 k8s-worker-1:
   cores: 2
   memory: 4096
   pve_node: pve-03
   desc: K8s Worker 1
   template: jammy_cloud
-  scsihw: lsi
+  scsihw: virtio-scsi-pci
   tags:
     - ubuntu
     - k8s
@@ -43,19 +37,13 @@ k8s-worker-1:
         firewall: false
         link_down: false
         model: virtio
-    disks:
-      scsi0:
-        size: 20G
-        storage: ceph-vm
-        type: scsi
-        format: raw
 k8s-worker-2:
   cores: 2
   memory: 4096
   pve_node: pve-03
   desc: K8s Worker 1
   template: jammy_cloud
-  scsihw: lsi
+  scsihw: virtio-scsi-pci
   tags:
     - ubuntu
     - k8s
@@ -69,12 +57,6 @@ k8s-worker-2:
         firewall: false
         link_down: false
         model: virtio
-    disks:
-      scsi0:
-        size: 20G
-        storage: ceph-vm
-        type: scsi
-        format: raw
 keycloak:
   cores: 2
   memory: 2048
@@ -84,7 +66,7 @@ keycloak:
     - keycloak
     - ubuntu
   template: jammy_cloud
-  scsihw: lsi
+  scsihw: virtio-scsi-pci
   dynamic:
     networks:
       primary:
@@ -93,19 +75,13 @@ keycloak:
         firewall: false
         link_down: false
         model: virtio
-    disks:
-      scsi0:
-        size: 20G
-        storage: ceph-vm
-        type: scsi
-        format: raw
 vpn:
   cores: 2
   memory: 4096
   pve_node: pve-03
   desc: wireguard Server
   template: jammy_cloud
-  scsihw: lsi
+  scsihw: virtio-scsi-pci
   tags:
     - ubuntu
     - wireguard
@@ -118,9 +94,118 @@ vpn:
         firewall: false
         link_down: false
         model: virtio
-    disks:
-      scsi0:
-        size: 20G
-        storage: ceph-vm
-        type: scsi
-        format: raw
+netbox:
+  cores: 2
+  sockets: 1
+  vcpus: 1
+  cpu: cputype=qemu64
+  memory: 2048
+  pve_node: pve-03
+  desc: PowerDNS Server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - netbox
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.40
+        firewall: false
+        link_down: false
+        model: virtio
+minecraft:
+  cores: 2
+  sockets: 2
+  vcpus: 2
+  cpu: cputype=qemu64
+  memory: 4096
+  pve_node: pve-03
+  desc: Minecraft server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - minecraft
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.30
+        firewall: false
+        link_down: false
+        model: virtio
+pdns-1:
+  cores: 2
+  sockets: 1
+  vcpus: 1
+  cpu: cputype=qemu64
+  memory: 2048
+  pve_node: pve-03
+  desc: PowerDNS Server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - powerdns
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.241
+        firewall: false
+        link_down: false
+        model: virtio
+pdns-2:
+  cores: 2
+  sockets: 1
+  vcpus: 1
+  cpu: cputype=qemu64
+  memory: 2048
+  pve_node: pve-03
+  desc: PowerDNS Server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - powerdns
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.242
+        firewall: false
+        link_down: false
+        model: virtio
+netbox:
+  cores: 2
+  sockets: 1
+  vcpus: 1
+  cpu: cputype=qemu64
+  memory: 2048
+  pve_node: pve-03
+  desc: PowerDNS Server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - netbox
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.40
+        firewall: false
+        link_down: false
+        model: virtio
