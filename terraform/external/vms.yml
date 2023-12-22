@@ -13,7 +13,7 @@ k8s-control-1:
     networks:
       primary:
         net: internal
-        ip: 10.0.0.80
+        ip: 10.0.0.65
         firewall: false
         link_down: false
         model: virtio
@@ -33,7 +33,7 @@ k8s-worker-1:
     networks:
       primary:
         net: internal
-        ip: 10.0.0.80
+        ip: 10.0.0.66
         firewall: false
         link_down: false
         model: virtio
@@ -53,7 +53,7 @@ k8s-worker-2:
     networks:
       primary:
         net: internal
-        ip: 10.0.0.80
+        ip: 10.0.0.67
         firewall: false
         link_down: false
         model: virtio
@@ -77,7 +77,7 @@ keycloak:
         model: virtio
 vpn:
   cores: 2
-  memory: 4096
+  memory: 2048
   pve_node: pve-03
   desc: wireguard Server
   template: jammy_cloud

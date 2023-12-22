@@ -1,6 +1,6 @@
-keycloak:
-  ipv4: 10.0.0.32
-  reverse_record: false
+ldap:
+  ipv4: 10.0.0.21
+  reverse_record: true
 erl3:
   ipv4: 10.0.0.1
   reverse_record: true
