@@ -1,6 +1,6 @@
 ---
 - name: installing stuff
-  hosts: freeipa
+  hosts: keycloak
   become: true
 
   vars:
@@ -109,7 +109,7 @@
     - role: geerlingguy.docker
       vars:
         docker_users:
-          - range
+          - ubuntu
           - keycloak
         docker_install_compose: true
         docker_compose_version: "v2.19.0"
