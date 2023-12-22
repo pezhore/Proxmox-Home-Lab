@@ -1,13 +1,13 @@
 ---
 - name: Deploy certificates
-  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault_lb, ubiquiti, starr.lan.pezlab.dev
+  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault_lb, ubiquiti, ldap.lan.pezlab.dev, starr.lan.pezlab.dev
   become: true
 
   vars:
-    wildcard_cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert }}"
-    wildcard_chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').chain }}"
-    wildcard_fullchain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').fullchain }}"
-    wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey }}"
+    wildcard_cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').cert }}"
+    wildcard_chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').chain }}"
+    wildcard_fullchain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').fullchain }}"
+    wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').privkey }}"
 
   tasks:
     - name: Install certs to starr
@@ -22,7 +22,7 @@
           notify: restart nginx
           no_log: true
       when: "'starr.lan.pezlab.dev' in inventory_hostname"
-
+      
     - name: Install certs to netbox
       block:
         - name: set content of Netbox certificate and key
@@ -201,8 +201,8 @@
         name: lighttpd
         state: restarted
 
-    - name: restart lighttpd
+    - name: restart httpd
       ansible.builtin.systemd:
-        name: lighttpd
+        name: httpd
         state: restart
         enabled: yes
