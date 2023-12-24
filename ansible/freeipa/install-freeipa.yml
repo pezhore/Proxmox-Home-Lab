@@ -4,10 +4,10 @@
   become: true
 
   vars:
-    wildcard_cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert }}"
-    wildcard_chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').chain }}"
-    wildcard_fullchain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').fullchain }}"
-    wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey }}"
+    wildcard_cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').cert }}"
+    wildcard_chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').chain }}"
+    wildcard_fullchain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').fullchain }}"
+    wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').privkey }}"
     install_ipa: false
 
   pre_tasks:
