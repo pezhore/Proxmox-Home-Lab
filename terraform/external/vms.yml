@@ -1,3 +1,22 @@
+kubes:
+  cores: 2
+  memory: 4096
+  pve_node: pve-03
+  desc: K8s LB
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - ubuntu
+    - k8s
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.64
+        firewall: false
+        link_down: false
+        model: virtio
 k8s-control-1:
   cores: 2
   memory: 4096
