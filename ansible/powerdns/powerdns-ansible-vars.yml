@@ -1,2 +1,2 @@
-"wildcard_tls_cert": "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert}}"
-"wildcard_tls_key": "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey}}"
+"wildcard_tls_cert": "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').cert}}"
+"wildcard_privkey": "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').privkey}}"
