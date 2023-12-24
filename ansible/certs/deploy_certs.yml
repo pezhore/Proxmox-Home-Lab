@@ -1,6 +1,6 @@
 ---
 - name: Deploy certificates
-  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault_lb, ubiquiti, ldap.lan.pezlab.dev, starr.lan.pezlab.dev
+  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault_lb, ubiquiti, ldap.lan.pezlab.dev, starr.lan.pezlab.dev, octoprint
   become: true
 
   vars:
@@ -22,7 +22,7 @@
           notify: restart nginx
           no_log: true
       when: "'starr.lan.pezlab.dev' in inventory_hostname"
-      
+
     - name: Install certs to netbox
       block:
         - name: set content of Netbox certificate and key
@@ -162,6 +162,23 @@
           notify: restart nginx
       when: inventory_hostname in groups['vault_lb']
 
+    - name: Install certs on octoprint systems
+      block:
+        - name: set the bundle variable
+          ansible.builtin.set_fact:
+            wildcard_bundle: "{{ wildcard_cert }}\n{{ wildcard_privkey }}\n{{ wildcard_fullchain }}"
+
+        - name: Set the contents of the cert file
+          ansible.builtin.copy:
+            dest: /etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem
+            content: "{{ wildcard_bundle }}"
+            backup: true
+            owner: root
+            group: root
+          notify: restart haproxy
+
+      when: inventory_hostname in groups['octoprint']
+
     - name: Install certs on ubiquiti systems
       block:
         - name: Ensure the /config/auth/certificates directory exists
@@ -205,4 +222,10 @@
       ansible.builtin.systemd:
         name: httpd
         state: restart
+        enabled: yes
+
+    - name: restart haproxy
+      ansible.builtin.systemd:
+        name: haproxy
+        state: restarted
         enabled: yes
