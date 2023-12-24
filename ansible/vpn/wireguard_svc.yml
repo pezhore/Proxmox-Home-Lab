@@ -103,16 +103,6 @@
         value: 1
         state: present
         reload: yes
-    
-    - name: set our server vars file for client usage
-      ansible.builtin.copy:
-        dest: ansible_vars_wg_server.yml
-        content: |
-          wg_ext_gateway: {{ ansible_default_ipv4.gateway }}
-          wg_ext_ip: {{ ansible_default_ipv4.address }}
-      delegate_to: localhost
-      become: false
-
   
   handlers:
     - name: restart wireguard
