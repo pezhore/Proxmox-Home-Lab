@@ -70,7 +70,7 @@
       block:
         - copy:
             dest: /etc/pve/local/pve-ssl.pem
-            content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert}}"
+            content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').cert}}"
             owner: root
             group: www-data
             mode: 0640
@@ -78,7 +78,7 @@
         - name: Install key from vault
           copy:
             dest: /etc/pve/local/pve-ssl.key
-            content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey}}"
+            content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').privkey}}"
             owner: root
             group: www-data
             mode: 0640
