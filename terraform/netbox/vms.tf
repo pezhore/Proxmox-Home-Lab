@@ -32,10 +32,9 @@ resource "netbox_primary_ip" "myvm_primary_ip" {
 }
 
 resource "netbox_ip_address" "extra_dns_ip" {
-  for_each = local.extradns
+  for_each = local.extradns.lan_pezlab_dev
 
   ip_address  = "${each.value.ipv4}/24"
   status      = "active"
-  object_type = "virtualization.vminterface"
   dns_name    = "${each.key}.lan.pezlab.dev"
 }
