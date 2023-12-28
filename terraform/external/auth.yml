@@ -1,0 +1,14 @@
+service:
+  bind:
+    first_name: bind
+    last_name: bind
+    email_address:
+      - bind@lan.pezlab.dev
+admins:
+  pez:
+    first_name: Brian
+    last_name: Marsh
+    email_address:
+      - pez@lan.pezlab.dev
+groups:
+  service:
