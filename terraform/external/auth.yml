@@ -12,3 +12,13 @@ admins:
       - pez@lan.pezlab.dev
 groups:
   service:
+  vault_admins:
+  
+group_members:
+  admins:
+    - pez
+  service:
+    - bind
+  vault_admins:
+    - pez
+    - admin

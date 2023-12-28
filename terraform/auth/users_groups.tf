@@ -21,13 +21,19 @@ resource "freeipa_group" "group" {
 }
 
 resource "freeipa_user_group_membership" "admins" {
-  for_each = local.auth.admins
-  user     = each.key
+  for_each = {for k,v in local.auth.group_members.admins: k => v}
+  user     = each.value
   name     = "admins"
 }
 
 resource "freeipa_user_group_membership" "service" {
-  for_each = local.auth.service
-  user     = each.key
+  for_each = {for k,v in local.auth.group_members.service: k => v}
+  user     = each.value
   name     = "service"
+}
+
+resource "freeipa_user_group_membership" "vault_admins" {
+    for_each = {for k,v in local.auth.group_members.vault_admins: k => v}
+    user = each.value
+    name = "vault_admins"
 }
