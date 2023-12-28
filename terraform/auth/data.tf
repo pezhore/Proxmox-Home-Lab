@@ -11,6 +11,10 @@ data "vault_generic_secret" "freeipa" {
   path = "homelab/software/freeipa"
 }
 
-data "vault_generic_secret" "shared" {
-  path = "homelab/shared"
+data "vault_generic_secret" "keycloak" {
+  path = "homelab/software/keycloak"
+}
+
+data "vault_generic_secret" "ldap" {
+  path = "homelab/software/ldap"
 }
