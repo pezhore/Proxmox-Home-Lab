@@ -1,0 +1,72 @@
+---
+- name: Setup LDAPS with lets encrypt
+  hosts: ldap
+  become: yes
+  
+  tasks:
+    - name: Ensure the /root/.secrets directory exists
+      ansible.builtin.file:
+        path: /root/.secrets
+        state: directory
+        mode: 0700
+
+    - name: Create the /root/.secrets/cloudflare.ini file with content from vault
+      ansible.builtin.copy:
+        dest: /root/.secrets/cloudflare.ini
+        content: |
+          dns_cloudflare_email = "{{ lookup('hashi_vault', 'secret=homelab/data/services/cloudflare').email}}"
+          dns_cloudflare_api_key = "{{ lookup('hashi_vault', 'secret=homelab/data/services/cloudflare').global_api}}"
+        mode: 0440
+
+    - name: Execute command to do the dns thing
+      ansible.builtin.command: certbot certonly --dns-cloudflare --dns-cloudflare-credentials /root/.secrets/cloudflare.ini -d ldap.lan.pezlab.dev --preferred-challenges dns-01 --non-interactive --agree-tos -m "{{ lookup('hashi_vault','secret=homelab/data/services/cloudflare').email}}" --dns-cloudflare-propagation-seconds 60
+      register: certbot
+    
+    - name: debug output
+      debug:
+        msg: "{{ certbot.stdout }}"
+        
+    - name: Slurp up the cert
+      ansible.builtin.slurp:
+        src: /etc/letsencrypt/live/ldaps.lan.pezlab.dev/cert.pem
+      register: cert
+    
+    - name: Slurp up the chain
+      ansible.builtin.slurp:
+        src: /etc/letsencrypt/live/ldaps.lan.pezlab.dev/chain.pem
+      register: chain
+    
+    - name: Slurp up the fullchain
+      ansible.builtin.slurp:
+        src: /etc/letsencrypt/live/ldaps.lan.pezlab.dev/fullchain.pem
+      register: fullchain
+    
+    - name: Slurp up the privkey
+      ansible.builtin.slurp:
+        src: /etc/letsencrypt/live/ldaps.lan.pezlab.dev/privkey.pem
+      register: privkey
+
+    - name: Push content of certs to vault
+      community.hashi_vault.vault_write:
+          path: homelab/data/certificates/ldap
+          data:
+            data:
+              ldaps_cert: "{{ cert.content | b64decode }}"
+              ldaps_chain: "{{ chain.content | b64decode }}"
+              ldaps_fullchain: "{{ fullchain.content | b64decode }}"
+              ldaps_privkey: "{{ privkey.content | b64decode }}"
+      become: false
+      delegate_to: localhost
+
+    - name: Block to Copy certs to proper locations
+      ansible.builtin.copy:
+        remote_src: yes
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: "{{ item.owner }}"
+        mode: "{{ item.mode }}"
+      with_items:
+        - { src: "/etc/letsencrypt/live/ldaps.lan.pezlab.dev/fullchain.pem", dest: "/tmp/fullchain.pem", owner: "root", mode: "0644" }
+        - { src: "/etc/letsencrypt/live/ldaps.lan.pezlab.dev/privkey.pem", dest: "/tmp/privkey.pem", owner: "root", mode: "0644" }
+        - { src: "/etc/letsencrypt/live/ldaps.lan.pezlab.dev/cert.pem", dest: "/tmp/cert.pem", owner: "root", mode: "0644" }
+        - { src: "/etc/letsencrypt/live/ldaps.lan.pezlab.dev/chain.pem", dest: "/tmp/chain.pem", owner: "root", mode: "0644" }

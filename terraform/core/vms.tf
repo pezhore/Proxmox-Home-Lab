@@ -53,8 +53,9 @@ resource "proxmox_vm_qemu" "core" {
 
   scsihw = each.value.scsihw
   dynamic "disk" {
-    for_each = { for idx, d in each.value.dynamic.disks : idx => d }
-
+    for_each = can(each.value.dynamic.disks) ? {
+      for idx, d in each.value.dynamic.disks : idx => d
+    } : {}
     content {
       type    = disk.value.type
       storage = disk.value.storage

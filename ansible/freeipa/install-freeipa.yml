@@ -1,0 +1,90 @@
+---
+- name: Install FreeIPA Server
+  hosts: ldap
+  become: true
+
+  vars:
+    wildcard_cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').cert }}"
+    wildcard_chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').chain }}"
+    wildcard_fullchain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').fullchain }}"
+    wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').privkey }}"
+    install_ipa: false
+
+  pre_tasks:
+  - name: Update Package Cache (apt/Ubuntu)
+    tags: always
+    apt:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Update Package Cache (dnf/CentOS)
+    tags: always
+    dnf:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "CentOS"
+
+  - name: Update Package Cache (yum/Amazon)
+    tags: always
+    yum:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Amazon"
+
+  - name: Install pip3
+    ansible.builtin.package:
+      name: python3-pip
+      state: latest
+
+  - name: Install pexpect
+    ansible.builtin.pip:
+      name: pexpect
+      state: latest
+
+  roles:
+  - role: freeipa.ansible_freeipa.ipaserver
+    state: present
+    vars:
+      ipadm_password: "{{ lookup('hashi_vault', 'secret=homelab/data/software/freeipa').ipadm_password }}"
+      ipaadmin_password: "{{ lookup('hashi_vault', 'secret=homelab/data/software/freeipa').ipaadmin_password }}"
+      ipaserver_domain: lan.pezlab.dev
+      ipaserver_realm: LAN.PEZLAB.DEV
+      ipaserver_setup_firewalld: yes
+    when: install_ipa
+
+  post_tasks:
+  - name: Create Default all sudoers rule
+    freeipa.ansible_freeipa.ipasudorule:
+      name: All-sudo
+      ipaadmin_password: "{{ lookup('hashi_vault', 'secret=homelab/data/software/freeipa').ipaadmin_password }}"
+      description: "Default rule to allow Group Admin sudo-access"
+      hostcategory: all
+      cmdcategory: all
+      runasgroupcategory: all
+      runasusercategory: all
+      group: ["admins"]
+      state: present
+
+  # - name: set content of certificate and key
+  #   ansible.builtin.copy:
+  #     dest: "{{ item.dest }}"
+  #     content: "{{ item.content }}"
+  #     backup: yes
+  #   with_items:
+  #     - { dest: "/var/lib/ipa/certs/httpd.crt", content: "{{ wildcard_cert }}" }
+  #     - { dest: "/var/lib/ipa/private/httpd.key", content: "{{ wildcard_privkey }}" }
+  #     - { dest: "/etc/httpd/ca.crt", content: "{{ wildcard_chain }}" }
+  #   no_log: true
+  #   notify: restart httpd
+
+  handlers:
+    - name: Restart FreeIPA
+      ansible.builtin.service:
+        name: dirsrv@LAN-PEZLAB-DEV
+        state: restarted
+
+    - name: restart httpd
+      ansible.builtin.service:
+        name: httpd
+        state: restarted

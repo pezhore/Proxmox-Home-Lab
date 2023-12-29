@@ -1,0 +1,17 @@
+[Interface]
+Address = {{ wg_server.gw_address }}/{{ wg_server.gw_cidr }}
+#SaveConfig = true
+PostUp = ufw route allow in on wg0 out on eth0
+PostUp = iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE
+PreDown = ufw route delete allow in on wg0 out on eth0
+PreDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+ListenPort = {{ wg_server.listen_port }}
+PrivateKey = {{ wg_private_key }}
+
+{% for peer in peers %}
+[Peer]
+# {{ peer.name }}
+PublicKey = {{ lookup('hashi_vault', 'secret=homelab/data/services/wireguard/pubkeys:'+peer.keyid) }}
+AllowedIPs = {{ peer.allowed_ips }}
+
+{% endfor %}

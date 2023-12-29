@@ -8,12 +8,12 @@
   pre_tasks:
     - name: Copy Cert
       ansible.builtin.copy:
-        content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert }}"
+        content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').cert }}"
         dest: /etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem
     
     - name: Copy Key
       ansible.builtin.copy:
-        content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey }}"
+        content: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').privkey }}"
         dest: /etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem
     
     - name: Install pre-requisite apt packages

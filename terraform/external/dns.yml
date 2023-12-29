@@ -1,84 +1,92 @@
-keycloak:
-  ipv4: 10.0.0.32
-  reverse_record: false
-erl3:
-  ipv4: 10.0.0.1
-  reverse_record: true
-esw24:
-  ipv4: 10.0.0.2
-  reverse_record: true
-ds1618:
-  ipv4: 10.0.0.16
-  reverse_record: true
-pihole:
-  ipv4: 10.0.0.19
-  reverse_record: true
-uckg2:
-  ipv4: 10.0.0.130
-  reverse_record: true
-vault:
-  ipv4: 10.0.0.181
-  reverse_record: true
-vault-1:
-  ipv4: 10.0.0.181
-  reverse_record: false
-vault-2:
-  ipv4: 10.0.0.181
-  reverse_record: false
-vault-3:
-  ipv4: 10.0.0.181
-  reverse_record: false
-vault-4:
-  ipv4: 10.0.0.181
-  reverse_record: false
-orbi-s:
-  ipv4: 10.0.0.5
-  reverse_record: true
-tls-sg105e:
-  ipv4: 10.0.0.6
-  reverse_record: true
-pve-01:
-  ipv4: 10.0.0.211
-  reverse_record: true
-pve-02:
-  ipv4: 10.0.0.212
-  reverse_record: true
-pve-03:
-  ipv4: 10.0.0.213
-  reverse_record: true
-starr:
-  ipv4: 10.0.0.41
-  reverse_record: true
-sonarr:
-  ipv4: 10.0.0.41
-  reverse_record: false
-radarr:
-  ipv4: 10.0.0.41
-  reverse_record: false
-sabnzbd:
-  ipv4: 10.0.0.41
-  reverse_record: false
-lidarr:
-  ipv4: 10.0.0.41
-  reverse_record: false
-namarr:
-  ipv4: 10.0.0.41
-  reverse_record: false
-calibre:
-  ipv4: 10.0.0.41
-  reverse_record: false
-calibre-web:
-  ipv4: 10.0.0.41
-  reverse_record: false
-comicrack:
-  ipv4: 10.0.0.41
-  reverse_record: false
-plexovo:
-  ipv4: 10.0.0.42
-  reverse_record: true
-octopi:
-  ipv4: 10.0.0.220
-  reverse_record: true
-overseerr:
-  ipv4: 10.0.0.41
-  reverse_record: false
+lan_pezlab_dev:
+  ldap:
+    ipv4: 10.0.0.21
+    reverse_record: true
+  erl3:
+    ipv4: 10.0.0.1
+    reverse_record: true
+  esw24:
+    ipv4: 10.0.0.2
+    reverse_record: true
+  ds1618:
+    ipv4: 10.0.0.16
+    reverse_record: true
+  ds415:
+    ipv4: 10.0.0.11
+    reverse_record: true
+  pihole:
+    ipv4: 10.0.0.19
+    reverse_record: true
+  uckg2:
+    ipv4: 10.0.0.130
+    reverse_record: true
+  vault:
+    ipv4: 10.0.0.181
+    reverse_record: true
+  vault-1:
+    ipv4: 10.0.0.181
+    reverse_record: false
+  vault-2:
+    ipv4: 10.0.0.181
+    reverse_record: false
+  vault-3:
+    ipv4: 10.0.0.181
+    reverse_record: false
+  vault-4:
+    ipv4: 10.0.0.181
+    reverse_record: false
+  orbi-s:
+    ipv4: 10.0.0.5
+    reverse_record: true
+  tls-sg105e:
+    ipv4: 10.0.0.6
+    reverse_record: true
+  pve-01:
+    ipv4: 10.0.0.211
+    reverse_record: true
+  pve-02:
+    ipv4: 10.0.0.212
+    reverse_record: true
+  pve-03:
+    ipv4: 10.0.0.213
+    reverse_record: true
+  starr:
+    ipv4: 10.0.0.41
+    reverse_record: true
+  sonarr:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  radarr:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  sabnzbd:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  lidarr:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  namarr:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  calibre:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  calibre-web:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  comicrack:
+    ipv4: 10.0.0.41
+    reverse_record: false
+  plexovo:
+    ipv4: 10.0.0.42
+    reverse_record: true
+  octopi:
+    ipv4: 10.0.0.220
+    reverse_record: true
+  overseerr:
+    ipv4: 10.0.0.41
+    reverse_record: false
+pezlab_lan:
+  kubes:
+    ipv4: 10.0.0.64
+    reverse_record: false

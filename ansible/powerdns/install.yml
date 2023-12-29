@@ -63,7 +63,7 @@
     
     - name: Copy Key
       copy:
-        content: "{{ wildcard_tls_key }}"
+        content: "{{ wildcard_privkey }}"
         dest: /etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem
       notify:
         - restart nginx

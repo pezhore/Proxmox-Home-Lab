@@ -78,7 +78,7 @@ module "extra_records" {
 
   source = "./modules/dns_record"
   for_each = {
-    for vm, conf in local.extradns : vm => conf
+    for vm, conf in local.extradns.lan_pezlab_dev : vm => conf
     if !contains(["pdns-1", "pdns-2"], vm)
   }
 

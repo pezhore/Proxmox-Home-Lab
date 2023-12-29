@@ -1,13 +1,13 @@
 ---
 - name: Deploy certificates
-  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault_lb, ubiquiti, starr.lan.pezlab.dev
+  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault_lb, ubiquiti, ldap.lan.pezlab.dev, starr.lan.pezlab.dev, octoprint
   become: true
 
   vars:
-    wildcard_cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert }}"
-    wildcard_chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').chain }}"
-    wildcard_fullchain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').fullchain }}"
-    wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey }}"
+    wildcard_cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').cert }}"
+    wildcard_chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').chain }}"
+    wildcard_fullchain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').fullchain }}"
+    wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').privkey }}"
 
   tasks:
     - name: Install certs to starr
@@ -162,6 +162,23 @@
           notify: restart nginx
       when: inventory_hostname in groups['vault_lb']
 
+    - name: Install certs on octoprint systems
+      block:
+        - name: set the bundle variable
+          ansible.builtin.set_fact:
+            wildcard_bundle: "{{ wildcard_cert }}\n{{ wildcard_privkey }}\n{{ wildcard_fullchain }}"
+
+        - name: Set the contents of the cert file
+          ansible.builtin.copy:
+            dest: /etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem
+            content: "{{ wildcard_bundle }}"
+            backup: true
+            owner: root
+            group: root
+          notify: restart haproxy
+
+      when: inventory_hostname in groups['octoprint']
+
     - name: Install certs on ubiquiti systems
       block:
         - name: Ensure the /config/auth/certificates directory exists
@@ -201,8 +218,14 @@
         name: lighttpd
         state: restarted
 
-    - name: restart lighttpd
+    - name: restart httpd
       ansible.builtin.systemd:
-        name: lighttpd
+        name: httpd
         state: restart
+        enabled: yes
+
+    - name: restart haproxy
+      ansible.builtin.systemd:
+        name: haproxy
+        state: restarted
         enabled: yes

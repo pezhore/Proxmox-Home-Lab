@@ -40,13 +40,13 @@
             - certbot
             - python3-certbot-dns-cloudflare
         
-        - name: Execute command to do the dns thing
-          ansible.builtin.command: certbot certonly --dns-cloudflare --dns-cloudflare-credentials /root/.secrets/cloudflare.ini -d *.lan.pezlab.dev --preferred-challenges dns-01 --non-interactive --agree-tos -m "{{ lookup('hashi_vault', 'secret=homelab/data/services/cloudflare').email}}"
-          register: certbot
+        # - name: Execute command to do the dns thing
+        #   ansible.builtin.command: certbot certonly --dns-cloudflare --dns-cloudflare-credentials /root/.secrets/cloudflare.ini -d *.lan.pezlab.dev --preferred-challenges dns-01 --non-interactive --agree-tos -m "{{ lookup('hashi_vault', 'secret=homelab/data/services/cloudflare').email}}"
+        #   register: certbot
         
-        - name: debug output
-          debug:
-            msg: "{{ certbot.stdout }}"
+        # - name: debug output
+        #   debug:
+        #     msg: "{{ certbot.stdout }}"
             
         - name: Slurp up the cert
           ansible.builtin.slurp:
@@ -70,7 +70,7 @@
 
         - name: Push content of certs to vault
           community.hashi_vault.vault_write:
-              path: homelab/data/certificates
+              path: homelab/data/certificates/wildcard
               data:
                 data:
                   cert: "{{ cert.content | b64decode }}"
