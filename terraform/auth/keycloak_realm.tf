@@ -64,3 +64,18 @@ resource "keycloak_ldap_user_federation" "ldap_user_federation" {
   read_timeout       = "10s"
 }
 
+resource "keycloak_ldap_group_mapper" "ldap_group_mapper" {
+  realm_id                = keycloak_realm.lan_pezlab_dev.id
+  ldap_user_federation_id = keycloak_ldap_user_federation.ldap_user_federation.id
+  name                    = "group-mapper"
+
+  ldap_groups_dn                 = "cn=groups,cn=accounts,dc=lan,dc=pezlab,dc=dev"
+  group_name_ldap_attribute      = "cn"
+  group_object_classes           = [
+    "groupOfNames"
+  ]
+  membership_attribute_type      = "DN"
+  membership_ldap_attribute      = "member"
+  membership_user_ldap_attribute = "cn"
+  memberof_ldap_attribute        = "memberOf"
+}
