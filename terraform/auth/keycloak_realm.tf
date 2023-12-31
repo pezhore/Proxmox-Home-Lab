@@ -4,12 +4,14 @@ resource "keycloak_realm" "lan_pezlab_dev" {
   display_name      = "Pezlab Lan"
   display_name_html = "<b>Pezlab Lan</b>"
 
-  login_theme = "base"
 
   access_code_lifespan = "1h"
-
-  ssl_required    = "external"
-  password_policy = "upperCase(1) and length(8) and forceExpiredPasswordChange(365) and notUsername"
+  account_theme        = "keycloak.v2"
+  admin_theme          = "keycloak.v2"
+  email_theme          = "keycloak"
+  login_theme          = "keycloak"
+  ssl_required         = "external"
+  password_policy      = "upperCase(1) and length(8) and forceExpiredPasswordChange(365) and notUsername"
 
 
   internationalization {
@@ -69,9 +71,9 @@ resource "keycloak_ldap_group_mapper" "ldap_group_mapper" {
   ldap_user_federation_id = keycloak_ldap_user_federation.ldap_user_federation.id
   name                    = "group-mapper"
 
-  ldap_groups_dn                 = "cn=groups,cn=accounts,dc=lan,dc=pezlab,dc=dev"
-  group_name_ldap_attribute      = "cn"
-  group_object_classes           = [
+  ldap_groups_dn            = "cn=groups,cn=accounts,dc=lan,dc=pezlab,dc=dev"
+  group_name_ldap_attribute = "cn"
+  group_object_classes = [
     "groupOfNames"
   ]
   membership_attribute_type      = "DN"
