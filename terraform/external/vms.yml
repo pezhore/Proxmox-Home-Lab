@@ -4,7 +4,7 @@ k8s-control-1:
   pve_node: pve-03
   desc: K8s Controller
   template: jammy_cloud
-  scsihw: lsi
+  scsihw: virtio-scsi-pci
   tags:
     - ubuntu
     - k8s
@@ -13,15 +13,15 @@ k8s-control-1:
     networks:
       primary:
         net: internal
-        ip: 10.0.0.80
+        ip: 10.0.0.65
         firewall: false
         link_down: false
         model: virtio
     disks:
       scsi0:
-        size: 20G
+        size: 2252M
         storage: ceph-vm
-        type: scsi
+        type: virtio
         format: raw
 k8s-worker-1:
   cores: 2
@@ -29,7 +29,7 @@ k8s-worker-1:
   pve_node: pve-03
   desc: K8s Worker 1
   template: jammy_cloud
-  scsihw: lsi
+  scsihw: virtio-scsi-pci
   tags:
     - ubuntu
     - k8s
@@ -39,15 +39,15 @@ k8s-worker-1:
     networks:
       primary:
         net: internal
-        ip: 10.0.0.80
+        ip: 10.0.0.66
         firewall: false
         link_down: false
         model: virtio
     disks:
       scsi0:
-        size: 20G
+        size: 2252M
         storage: ceph-vm
-        type: scsi
+        type: virtio
         format: raw
 k8s-worker-2:
   cores: 2
@@ -55,7 +55,7 @@ k8s-worker-2:
   pve_node: pve-03
   desc: K8s Worker 1
   template: jammy_cloud
-  scsihw: lsi
+  scsihw: virtio-scsi-pci
   tags:
     - ubuntu
     - k8s
@@ -65,15 +65,15 @@ k8s-worker-2:
     networks:
       primary:
         net: internal
-        ip: 10.0.0.80
+        ip: 10.0.0.67
         firewall: false
         link_down: false
         model: virtio
     disks:
       scsi0:
-        size: 20G
+        size: 2252M
         storage: ceph-vm
-        type: scsi
+        type: virtio
         format: raw
 keycloak:
   cores: 2
@@ -84,7 +84,7 @@ keycloak:
     - keycloak
     - ubuntu
   template: jammy_cloud
-  scsihw: lsi
+  scsihw: virtio-scsi-pci
   dynamic:
     networks:
       primary:
@@ -95,9 +95,9 @@ keycloak:
         model: virtio
     disks:
       scsi0:
-        size: 20G
+        size: 2252M
         storage: ceph-vm
-        type: scsi
+        type: virtio
         format: raw
 vpn:
   cores: 2
@@ -105,7 +105,7 @@ vpn:
   pve_node: pve-03
   desc: wireguard Server
   template: jammy_cloud
-  scsihw: lsi
+  scsihw: virtio-scsi-pci
   tags:
     - ubuntu
     - wireguard
@@ -120,7 +120,7 @@ vpn:
         model: virtio
     disks:
       scsi0:
-        size: 20G
+        size: 2252M
         storage: ceph-vm
-        type: scsi
+        type: virtio
         format: raw
