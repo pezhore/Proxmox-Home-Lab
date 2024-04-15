@@ -1,0 +1,94 @@
+- name: Upgrade Vault Stage
+  hosts: stage_vault
+  become: yes
+
+  vars:
+    sha_sum: sha256:3d5c27e35d8ed43d861e892fc7d8f888f2fda4319a36f344f8c09603fb184b50
+    ver: 1.14.0
+    zip: "https://releases.hashicorp.com/vault/{{ ver }}/vault_{{ ver }}_linux_amd64.zip"
+    unseal_keys: "{{ lookup('hashi_vault', 'secret=range/data/stage/software/vault:unseal_key') }}"
+
+  tasks:
+    - name: Get Vault version
+      block:
+      - name: Run version command
+        ansible.builtin.command: vault version
+        register: vault_ver
+
+      # The output from `vault version` is 'Vault vX.X.X', so we need to do some gnarly
+      # string manipulation to get the version number
+      - name: Set fact based on vault version
+        ansible.builtin.set_fact:
+          vault_version: "{{ ((vault_ver.stdout | split(' '))[1] | split('v'))[1] }}"
+
+      - name: output if we need to upgrade
+        ansible.builtin.debug:
+          msg: "Upgrade required!"
+        when: vault_version != ver
+
+    - name: Get vault Leader
+      block:
+        # More string manipulation to get the leader... this is ugly
+        - name: Run operator raft command
+          ansible.builtin.shell: vault operator raft list-peers | grep leader | cut -f 1 -d ' ' 
+          become: no
+          register: raft_peers
+        
+        - name: Set our Leader Fact
+          ansible.builtin.set_fact:
+            vault_leader: "{{ raft_peers.stdout }}"
+
+    - name: Upgrade block for non-leaders
+      block:
+        - debug:
+            msg: "Upgrade required! I'm not the leader!"
+
+        - name: Make the /usr/local/vault_version folder
+          ansible.builtin.file:
+            path: /usr/local/vault_{{ ver }}
+            state: directory
+            owner: root
+            group: root
+            mode: 0755
+
+        - name: download zip
+          ansible.builtin.get_url:
+            url: "{{ zip }}"
+            dest: /tmp/vault.zip
+            checksum: "{{ sha_sum }}"
+            mode: 0755
+
+        - name: extract zip
+          ansible.builtin.unarchive:
+            src: /tmp/vault.zip
+            dest: /usr/local/vault_{{ ver }}
+            remote_src: yes
+            owner: root
+            group: root
+            mode: 0755
+        
+        - name: Update symlink
+          ansible.builtin.file:
+            src: /usr/local/vault_{{ ver }}/vault
+            dest: /usr/local/bin/vault
+            state: link
+            force: yes
+            owner: root
+            group: root
+            mode: 0755
+
+        - name: restart vault
+          ansible.builtin.service:
+            name: vault
+            state: restarted
+            enabled: yes
+          
+        - name: unseal vault
+          shell: |
+            vault operator unseal {{ item }}
+          environment:
+            VAULT_ADDR: "https://127.0.0.1:8200"
+          with_items: "{{ unseal_keys }}"
+          no_log: true
+
+      when: vault_version != ver and ansible_hostname != vault_leader

@@ -1,0 +1,68 @@
+- name: Installs vault with ha storage backend raft
+  hosts: vault
+  become: yes
+
+  tasks:
+    - name: set the content for vault-1
+      ansible.builtin.copy:
+        src: vault-1.hcl
+        dest: /etc/vault.d/vault.hcl
+        owner: vault
+        group: vault
+      when: inventory_hostname == 'vault-01.lan.pezlab.dev'
+
+    - name: set the content for vault-2
+      ansible.builtin.copy:
+        src: vault-2.hcl
+        dest: /etc/vault.d/vault.hcl
+        owner: vault
+        group: vault
+      when: inventory_hostname == 'vault-02.lan.pezlab.dev'
+
+    - name: set the content for vault-3
+      ansible.builtin.copy:
+        src: vault-3.hcl
+        dest: /etc/vault.d/vault.hcl
+        owner: vault
+        group: vault
+      when: inventory_hostname == 'vault-03.lan.pezlab.dev'
+
+    - name: set the content for vault-4
+      ansible.builtin.copy:
+        src: vault-4.hcl
+        dest: /etc/vault.d/vault.hcl
+        owner: vault
+        group: vault
+      when: inventory_hostname == 'vault-04.lan.pezlab.dev'
+
+    - name: Create the /etc/vault.d/ssl directory
+      ansible.builtin.file:
+        path: /etc/vault.d/ssl
+        state: directory
+        owner: vault
+        group: vault
+        mode: 0755
+
+    - name: Copy up files
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: vault
+        group: vault
+        mode: 0640
+      with_items:
+        - { src: "tls.crt", dest: "/etc/vault.d/ssl/tls.crt" }
+        - { src: "tls.key", dest: "/etc/vault.d/ssl/tls.key" }
+        - { src: "tls_ca.pem", dest: "/etc/vault.d/ssl/tls_ca.pem" }
+    
+    - name: block to set /etc/hosts dns things
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        block: |
+          {{ item.ip }} {{ item.name }}
+        marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
+      loop:
+        - { name: vault-01.lan.pezlab.dev, ip: 172.19.181.1 }
+        - { name: vault-02.lan.pezlab.dev, ip: 172.19.181.2 }
+        - { name: vault-03.lan.pezlab.dev, ip: 172.19.181.3 }
+        - { name: vault-04.lan.pezlab.dev, ip: 172.19.181.4 }
