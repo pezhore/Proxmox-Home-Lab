@@ -1,0 +1,11 @@
+peers:
+  - name: Human Readable Name for system1
+    keyid: system1
+    allowed_ips: 172.16.255.2/32
+  - name: pixel-7
+    keyid: pixel-7
+    allowed_ips: 172.16.255.3/32
+wg_server:
+  gw_cidr: 24
+  gw_address: 172.16.255.1
+  listen_port: 51820

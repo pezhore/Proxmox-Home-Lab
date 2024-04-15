@@ -1,0 +1,114 @@
+---
+- name: Install/Configure Wireguard Server
+  hosts: vpn
+  become: true
+
+  vars:
+    wg_private_key: "{{ lookup('hashi_vault', 'secret=homelab/data/services/wireguard/privkeys:wg_server') }}"
+    update_packages: true
+  
+  vars_files:
+    - config.yml
+
+  tasks:
+    - name: Upgrade all packages
+      block:
+        - name: Update apt-get repo and cache
+          apt:
+            update_cache: yes
+            force_apt_get: yes
+            cache_valid_time: 3600
+          become: true
+
+        - name: Upgrade all packages
+          apt:
+            upgrade: dist
+          become: true
+
+        - name: Check if reboot is required
+          stat: 
+            path: /var/run/reboot-required
+          become: true
+          register: reboot_required
+
+        - name: Reboot system if required
+          reboot:
+            msg: Rebooting to complete system upgrade
+            reboot_timeout: 120
+          become: true
+          when: reboot_required.stat.exists
+      when: update_packages
+
+    - name: Install Wireguard
+      ansible.builtin.package:
+        name:
+          - wireguard
+        state: present
+
+    - name: Configure Wireguard Server
+      ansible.builtin.template:
+        dest: /etc/wireguard/wg0.conf
+        src: wg0_server.conf.j2
+        owner: root
+        group: root
+        backup: yes
+      notify: 
+        - restart wireguard
+    
+    - name: Enable and start Wireguard
+      ansible.builtin.service:
+        name: wg-quick@wg0.service
+        state: started
+        enabled: yes
+
+    - name: ufw deny incoming
+      community.general.ufw:
+        direction: incoming
+        proto: any
+        policy: deny
+      notify:
+        - reload ufw
+
+    - name: ufw allow outgoing
+      community.general.ufw:
+        direction: outgoing
+        proto: any
+        policy: allow
+      notify:
+        - reload ufw
+
+    - name: Add SSH to firewall
+      community.general.ufw:
+        rule: allow
+        proto: tcp
+        port: 22
+      notify:
+        - reload ufw
+
+    - name: Add Wireguard to firewall
+      community.general.ufw:
+        rule: allow
+        proto: udp
+        port: 51820
+      notify:
+        - reload ufw
+    
+    - name: enable ufw service
+      community.general.ufw:
+        state: enabled
+    
+    - name: Update sysctl.conf to allow ipv4 ip_forward
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        state: present
+        reload: yes
+  
+  handlers:
+    - name: restart wireguard
+      ansible.builtin.service:
+        name: wg-quick@wg0.service
+
+    - name: reload ufw
+      community.general.ufw:
+        state: reloaded
