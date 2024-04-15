@@ -4,8 +4,8 @@ terraform {
       source = "hashicorp/local"
     }
     telmate = {
-      source = "TheGameProfi/proxmox"
-      version = "2.9.15"
+      source ="Terraform-For-Proxmox/proxmox"
+      version = "0.0.1"
     }
     bpg = {
       source = "bpg/proxmox"

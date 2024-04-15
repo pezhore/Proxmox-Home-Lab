@@ -19,7 +19,7 @@ k8s-control-1:
         model: virtio
     disks:
       scsi0:
-        size: 2252M
+        size: 20G
         storage: ceph-vm
         type: virtio
         format: raw
@@ -45,7 +45,7 @@ k8s-worker-1:
         model: virtio
     disks:
       scsi0:
-        size: 2252M
+        size: 20G
         storage: ceph-vm
         type: virtio
         format: raw
@@ -71,7 +71,7 @@ k8s-worker-2:
         model: virtio
     disks:
       scsi0:
-        size: 2252M
+        size: 20G
         storage: ceph-vm
         type: virtio
         format: raw
@@ -93,12 +93,7 @@ keycloak:
         firewall: false
         link_down: false
         model: virtio
-    disks:
-      scsi0:
-        size: 2252M
-        storage: ceph-vm
-        type: virtio
-        format: raw
+    disks: {}
 vpn:
   cores: 2
   memory: 4096
@@ -113,14 +108,204 @@ vpn:
   dynamic:
     networks:
       primary:
-        net: internal
-        ip: 10.0.0.80
+        net: dmz
+        ip: 10.40.0.80
         firewall: false
         link_down: false
         model: virtio
     disks:
       scsi0:
-        size: 2252M
+        size: 20G
         storage: ceph-vm
         type: virtio
         format: raw
+opa:
+  cores: 2
+  sockets: 2
+  vcpus: 2
+  cpu: cputype=qemu64
+  memory: 4096
+  pve_node: pve-03
+  desc: OPA server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - opa
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.50
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 30G
+        storage: ceph-vm
+        type: scsi
+        format: raw
+        discard: "on"
+
+minecraft:
+  cores: 2
+  sockets: 2
+  vcpus: 2
+  cpu: cputype=qemu64
+  memory: 4096
+  pve_node: pve-03
+  desc: Minecraft server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - minecraft
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.30
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 30G
+        storage: ceph-vm
+        type: scsi
+        format: raw
+        discard: "on"
+pdns-1:
+  cores: 2
+  sockets: 1
+  vcpus: 1
+  cpu: cputype=qemu64
+  memory: 2048
+  pve_node: pve-03
+  desc: PowerDNS Server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - powerdns
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.241
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 8G
+        storage: ceph-vm
+        type: scsi
+        format: raw
+        discard: "on"
+pdns-2:
+  cores: 2
+  sockets: 1
+  vcpus: 1
+  cpu: cputype=qemu64
+  memory: 2048
+  pve_node: pve-03
+  desc: PowerDNS Server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - powerdns
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.242
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 8G
+        storage: ceph-vm
+        type: scsi
+        format: raw
+        discard: "on"
+netbox:
+  cores: 2
+  sockets: 1
+  vcpus: 1
+  cpu: cputype=qemu64
+  memory: 2048
+  pve_node: pve-03
+  desc: PowerDNS Server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - netbox
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.40
+        firewall: false
+        link_down: false
+        model: virtio
+    disks:
+      scsi0:
+        size: 8G
+        storage: ceph-vm
+        type: scsi
+        format: raw
+        discard: "on"
+
+#         hey! This isn't working right now... and I'm moving to k8s
+#         ignore starr for now.
+# starr:
+#   cores: 2
+#   sockets: 2
+#   vcpus: 4
+#   cpu: cputype=qemu64
+#   memory: 16384
+#   pve_node: pve-03
+#   desc: PowerDNS Server
+#   template: jammy_cloud
+#   scsihw: virtio-scsi-pci
+#   tags:
+#     - starr
+#     - ubuntu
+#   cloudinit_storage: ceph-vm
+#   autostart: true
+#   dynamic:
+#     networks:
+#       primary:
+#         net: internal
+#         ip: 10.0.0.41
+#         firewall: false
+#         link_down: false
+#         model: virtio
+#       secondary:
+#         net: fibre
+#         ip: 10.30.1.101
+#         firewall: true
+#         link_down: false
+#         model: virtio
+#     disks:
+#       scsi0:
+#         size: 500G
+#         storage: ceph-vm
+#         type: scsi
+#         format: qcow
+#         discard: "on"
