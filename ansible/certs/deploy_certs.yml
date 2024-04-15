@@ -1,6 +1,6 @@
 ---
 - name: Deploy certificates
-  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault_lb, ubiquiti, ldap.lan.pezlab.dev, starr.lan.pezlab.dev, octoprint
+  hosts: netbox, minecraft, pdns, proxmox, pihole, plex, synology, vault_lb, ubiquiti, ldap.lan.pezlab.dev, starr.lan.pezlab.dev, octoprint, keycloak
   become: true
 
   vars:
@@ -10,14 +10,29 @@
     wildcard_privkey: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').privkey }}"
 
   tasks:
+    - name: Install certs to keycloak
+      block:
+        - name: set content of keycloak certificate and key
+          ansible.builtin.copy:
+            dest: "{{ item.dest }}"
+            content: "{{ item.content }}"
+            backup: true
+          with_items:
+            - { dest: "/opt/keycloak/certs/_.lan.pezlab.dev.pem", content: "{{ wildcard_fullchain }}" }
+            - { dest: "/opt/keycloak/certs/_.lan.pezlab.dev.key", content: "{{ wildcard_privkey }}" }
+            - { dest: "/opt/keycloak/certs/chain.crt", content: "{{ wildcard_chain }}" }
+          notify: restart keycloak
+          no_log: true
+      when: "'keycloak.lan.pezlab.dev' in inventory_hostname"
+
     - name: Install certs to starr
       block:
-        - name: set content of Netbox certificate and key
+        - name: set content of starr certificate and key
           ansible.builtin.copy:
             dest: "{{ item.dest }}"
             content: "{{ item.content }}"
           with_items:
-            - { dest: "/etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem", content: "{{ wildcard_cert }}" }
+            - { dest: "/etc/ssl/certs/wildcard.lan.pezlab.dev-certificate.pem", content: "{{ wildcard_fullchain }}" }
             - { dest: "/etc/ssl/private/wildcard.lan.pezlab.dev-private_key.pem", content: "{{ wildcard_privkey }}" }
           notify: restart nginx
           no_log: true
@@ -224,6 +239,11 @@
         state: restart
         enabled: yes
 
+    - name: restart keycloak
+      ansible.builtin.shell:
+        cmd: "docker compose restart"
+        chdir: /opt/keycloak
+   
     - name: restart haproxy
       ansible.builtin.systemd:
         name: haproxy

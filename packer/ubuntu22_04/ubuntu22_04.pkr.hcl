@@ -1,3 +1,11 @@
+packer {
+  required_plugins {
+    name = {
+      version = "~> 1"
+      source  = "github.com/hashicorp/proxmox"
+    }
+  }
+}
 
 variable "proxmox_node" {
   type    = string
@@ -21,7 +29,7 @@ variable "iso_storage_pool" {
 
 variable "ubuntu_iso_file" {
   type    = string
-  default = "ubuntu-22.04.2-live-server-amd64.iso"
+  default = "ubuntu-22.04.3-live-server-amd64.iso"
 }
 
 variable "vm_storage_pool" {
@@ -49,7 +57,7 @@ locals {
 source "proxmox" "pve01_ubuntu_2204" {
   boot_command = [
     "c<wait>",
-    "linux /casper/vmlinuz --- autoinstall net.ifnames=0 biosdevname=0 ip=dhcp ipv6.disable=1 ds=\"nocloud-net;seedfrom=http://{{.HTTPIP}}:{{.HTTPPort}}/\"", // IPv6 disabled to fix hang: https://answers.launchpad.net/ubuntu/+source/ubiquity/+question/698383
+    "linux /casper/vmlinuz --- only-ubiquity autoinstall net.ifnames=0 biosdevname=0 ip=dhcp ipv6.disable=1 ds=\"nocloud-net;seedfrom=http://{{.HTTPIP}}:{{.HTTPPort}}/\"", // IPv6 disabled to fix hang: https://answers.launchpad.net/ubuntu/+source/ubiquity/+question/698383
     "<enter><wait>",
     "initrd /casper/", // This is weird, but for some reason my proxmox/packer runs will ignore anything after '/casper/'
     "<enter><wait>",   //  so we throw in another enter/wait before typing in just 'initrd'
@@ -59,7 +67,7 @@ source "proxmox" "pve01_ubuntu_2204" {
   ]
 
   boot_wait = "5s"
-
+  cloud_init = true
   disks {
     disk_size         = "20G"
     storage_pool      = var.vm_storage_pool

@@ -4,11 +4,20 @@
 
   vars:
     vlans:
-        - { vlan_id: 100, description: "Isolated VLAN"}
-        - { vlan_id: 101, description: "Testing VLAN" }
         - { vlan_id: 10, description: "Primary Network VLAN"}
         - { vlan_id: 20, description: "Proxmox 1GB Storage"}
+        - { vlan_id: 30, description: "IOT VLAN"}
+        - { vlan_id: 40, description: "DMZ VLAN"}
+        - { vlan_id: 100, description: "Isolated VLAN"}
+        - { vlan_id: 101, description: "Testing VLAN" }
+        - { vlan_id: 200, description: "vxVLAN" }
   tasks:
+
+    - name: Ensure /etc/network/interfaces.d/vlans file exists
+      ansible.builtin.file:
+        path: /etc/network/interfaces.d/vlans
+        state: absent
+        mode: '0644'
 
     - name: Add our various vlan blocks
       ansible.builtin.blockinfile:
@@ -28,8 +37,6 @@
           {% endfor %}
 
         marker: "# {mark} ANSIBLE MANAGED BLOCK VLAN CONFIGURATION"
-
-
       notify: ifreload
   
   handlers:

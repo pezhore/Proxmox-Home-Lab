@@ -9,9 +9,10 @@ storage:
 templates:
   jammy_cloud:
     name: ubuntu-22.04-server-cloudimg-amd64
-    scsihw: virtio-scsi-pci
-    disk0_size: 2252M
-    disk0_type: virtio
+    disk0_size: "20G"
+  jammy_iso:
+    name: ubuntu-22.04-tmpl
+    disk0_size: "20G"
 tz: America/Chicago
 nodes:
   - pve-01

@@ -17,6 +17,7 @@ resource "proxmox_vm_qemu" "core" {
   # Ensure each VM is cloned in full to avoid
   # dependency to the original VM template
   full_clone = true
+  preprovision = false
 
   cores   = each.value.cores
   memory  = each.value.memory
@@ -26,7 +27,10 @@ resource "proxmox_vm_qemu" "core" {
 
   # Define a static IP on the primary network interface
   ipconfig0 = "ip=${each.value.dynamic.networks.primary.ip}/24,gw=${local.networks[each.value.dynamic.networks.primary.net].gateway}"
-
+  # ipconfig {
+  #   config = "ip=${each.value.dynamic.networks.primary.ip}/24,gw=${local.networks[each.value.dynamic.networks.primary.net].gateway}"
+  # }
+  
   dynamic "network" {
     for_each = each.value.dynamic.networks
 
@@ -61,7 +65,7 @@ resource "proxmox_vm_qemu" "core" {
       storage = disk.value.storage
       size    = disk.value.size
       format  = disk.value.format
-      ssd     = local.lab.storage[disk.value.storage].ssd
+      #ssd     = local.lab.storage[disk.value.storage].ssd
       discard = try(disk.value.discard, null)
     }
   }

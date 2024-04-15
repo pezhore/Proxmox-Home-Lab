@@ -14,3 +14,7 @@ fibre:
   bridge: vmbr2
   gateway: 10.30.1.1
   cidr: 24
+dmz:
+  bridge: vmbr40
+  gateway: 10.40.0.1
+  cidr: 24
