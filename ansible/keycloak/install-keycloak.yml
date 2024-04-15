@@ -1,6 +1,6 @@
 ---
 - name: installing stuff
-  hosts: freeipa
+  hosts: keycloak
   become: true
 
   vars:
@@ -75,13 +75,13 @@
       block:
         - name: "Retrieve SSL Cert"
           set_fact:
-            cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').cert}}"
+            cert: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').cert}}"
         - name: "Retrieve SSL key"
           set_fact:
-            key: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').privkey}}"
+            key: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').privkey}}"
         - name: "Retrieve SSL chain"
           set_fact:
-            chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates').chain}}"
+            chain: "{{ lookup('hashi_vault', 'secret=homelab/data/certificates/wildcard').chain}}"
 
         - name: Set ssl cert content
           ansible.builtin.copy:
@@ -109,7 +109,7 @@
     - role: geerlingguy.docker
       vars:
         docker_users:
-          - range
+          - ubuntu
           - keycloak
         docker_install_compose: true
         docker_compose_version: "v2.19.0"

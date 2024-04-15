@@ -1,3 +1,22 @@
+kubes:
+  cores: 2
+  memory: 4096
+  pve_node: pve-03
+  desc: K8s LB
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - ubuntu
+    - k8s
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.64
+        firewall: false
+        link_down: false
+        model: virtio
 k8s-control-1:
   cores: 2
   memory: 4096
@@ -156,6 +175,9 @@ minecraft:
   vcpus: 2
   cpu: cputype=qemu64
   memory: 4096
+vpn:
+  cores: 2
+  memory: 2048
   pve_node: pve-03
   desc: Minecraft server
   template: jammy_cloud
@@ -180,6 +202,52 @@ minecraft:
         type: scsi
         format: raw
         discard: "on"
+netbox:
+  cores: 2
+  sockets: 1
+  vcpus: 1
+  cpu: cputype=qemu64
+  memory: 2048
+  pve_node: pve-03
+  desc: PowerDNS Server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - netbox
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.40
+        firewall: false
+        link_down: false
+        model: virtio
+minecraft:
+  cores: 2
+  sockets: 2
+  vcpus: 2
+  cpu: cputype=qemu64
+  memory: 4096
+  pve_node: pve-03
+  desc: Minecraft server
+  template: jammy_cloud
+  scsihw: virtio-scsi-pci
+  tags:
+    - minecraft
+    - ubuntu
+  cloudinit_storage: ds1618
+  autostart: true
+  dynamic:
+    networks:
+      primary:
+        net: internal
+        ip: 10.0.0.30
+        firewall: false
+        link_down: false
+        model: virtio
 pdns-1:
   cores: 2
   sockets: 1
@@ -232,7 +300,7 @@ pdns-2:
         ip: 10.0.0.242
         firewall: false
         link_down: false
-        model: virtio
+        model: virti
     disks:
       scsi0:
         size: 8G
