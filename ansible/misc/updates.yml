@@ -1,17 +1,21 @@
-- hosts: minecraft, pdns, plex, starr, netbox, vault
+- name: Update all packages
+  hosts: minecraft, pdns, plex, starr, netbox, vault
   become: true
 
   tasks:
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-        cache_valid_time: 3600
- 
-    - name: Upgrade all packages
-      apt:
-        upgrade: true
-        autoremove: yes
-        autoclean: yes
+    - name: Block for Debian based systems
+      block:
+        - name: Update apt cache
+          apt:
+            update_cache: yes
+            cache_valid_time: 3600
+
+        - name: Upgrade all packages
+          apt:
+            upgrade: true
+            autoremove: yes
+            autoclean: yes
+      when: ansible_os_family == 'Debian'
 
     - name: Check if reboot required
       stat:
